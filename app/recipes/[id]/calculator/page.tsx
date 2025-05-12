@@ -56,7 +56,7 @@ export default function CalculatorPage() {
   }
 
   return (
-    <main className="container mx-auto px-4 py-8">
+    <main className="w-full px-4 md:px-8 lg:px-16 xl:px-24 py-8 max-w-[1600px] mx-auto">
       <div className="flex justify-between items-center mb-6">
         <Link
           href={`/recipes/${recipe.id}`}
@@ -86,7 +86,7 @@ export default function CalculatorPage() {
 
 function CalculatorSkeleton() {
   return (
-    <main className="container mx-auto px-4 py-8">
+    <main className="w-full px-4 md:px-8 lg:px-16 xl:px-24 py-8 max-w-[1600px] mx-auto">
       <div className="mb-6">
         <Skeleton className="h-8 w-32" />
       </div>

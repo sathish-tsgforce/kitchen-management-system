@@ -171,7 +171,7 @@ export default function InventoryPage() {
   return (
     <main className="container mx-auto px-4 py-8">
       <div className="mb-8 space-y-4">
-        <h1 className="text-4xl font-bold text-gray-900">Inventory Management</h1>
+        <h1 className="text-4xl font-bold text-gray-900">Inventory</h1>
         <p className="text-xl text-gray-700">Manage your ingredients inventory</p>
       </div>
 

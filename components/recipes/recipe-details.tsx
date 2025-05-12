@@ -57,6 +57,8 @@ export default function RecipeDetails({ recipeId }: RecipeDetailsProps) {
           body: "text-xl",
           detail: "text-lg",
           title: "text-5xl",
+          button: "text-lg py-3 px-5",
+          iconSize: "h-5 w-5",
         }
       case "x-large":
         return {
@@ -65,6 +67,8 @@ export default function RecipeDetails({ recipeId }: RecipeDetailsProps) {
           body: "text-2xl",
           detail: "text-xl",
           title: "text-6xl",
+          button: "text-xl py-4 px-6",
+          iconSize: "h-6 w-6",
         }
       default:
         return {
@@ -73,6 +77,8 @@ export default function RecipeDetails({ recipeId }: RecipeDetailsProps) {
           body: "text-lg",
           detail: "text-base",
           title: "text-4xl",
+          button: "text-base py-2 px-4",
+          iconSize: "h-4 w-4",
         }
     }
   }
@@ -81,7 +87,7 @@ export default function RecipeDetails({ recipeId }: RecipeDetailsProps) {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 md:px-8 lg:px-16 xl:px-24 py-8 max-w-[1600px] mx-auto">
         <div className="mb-6">
           <Skeleton className="h-8 w-32" />
         </div>
@@ -125,7 +131,7 @@ export default function RecipeDetails({ recipeId }: RecipeDetailsProps) {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 md:px-8 lg:px-16 xl:px-24 py-8 max-w-[1600px] mx-auto">
         <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
           <h2 className="text-xl font-bold text-red-700 mb-2">Error</h2>
           <p className="text-red-600">{error}</p>
@@ -141,7 +147,7 @@ export default function RecipeDetails({ recipeId }: RecipeDetailsProps) {
   }
 
   return (
-    <main className="container mx-auto px-4 py-8">
+    <main className="w-full px-4 md:px-8 lg:px-16 xl:px-24 py-8 max-w-[1600px] mx-auto">
       <div className="flex justify-between items-center mb-6">
         <Link
           href="/"
@@ -162,16 +168,24 @@ export default function RecipeDetails({ recipeId }: RecipeDetailsProps) {
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <h1 className={`${textClasses.title} font-bold text-gray-900`}>{recipe.name}</h1>
-              <div className="flex flex-wrap gap-2">
-                <Button asChild variant="outline" size="sm" className="h-9">
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  asChild
+                  variant="outline"
+                  className={`${textClasses.button} h-auto bg-green-50 border-green-600 text-green-700 hover:bg-green-100 hover:text-green-800 focus:ring-2 focus:ring-green-500 focus:ring-offset-2`}
+                >
                   <Link href={`/recipes/${recipe.id}/calculator`}>
-                    <Calculator className="mr-2 h-4 w-4" />
+                    <Calculator className={`mr-2 ${textClasses.iconSize}`} />
                     Serving Calculator
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="sm" className="h-9">
+                <Button
+                  asChild
+                  variant="outline"
+                  className={`${textClasses.button} h-auto bg-blue-50 border-blue-600 text-blue-700 hover:bg-blue-100 hover:text-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+                >
                   <Link href={`/recipes/${recipe.id}/edit`}>
-                    <Edit className="mr-2 h-4 w-4" />
+                    <Edit className={`mr-2 ${textClasses.iconSize}`} />
                     Edit Recipe
                   </Link>
                 </Button>

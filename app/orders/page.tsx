@@ -1469,7 +1469,7 @@ export default function OrdersPage() {
     <main className="container mx-auto px-4 py-8">
       <div className="mb-8 space-y-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-4xl font-bold text-gray-900">Order Management</h1>
+          <h1 className="text-4xl font-bold text-gray-900">Orders</h1>
           <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing} className="ml-auto">
             {isRefreshing ? (
               <>
