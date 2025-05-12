@@ -205,6 +205,20 @@ const OrderActions = memo(
 )
 OrderActions.displayName = "OrderActions"
 
+// Format order items for display
+const formatOrderItems = (items) => {
+  if (!items || items.length === 0) return "No items"
+
+  // Create a summary string of the first 2 items with quantities
+  const summary = items
+    .slice(0, 2)
+    .map((item) => `${item.quantity}x ${item.name}`)
+    .join(", ")
+
+  // Add "and X more" if there are more than 2 items
+  return items.length > 2 ? `${summary} and ${items.length - 2} more` : summary
+}
+
 // Memoized OrderRow component to prevent unnecessary re-renders
 const OrderRow = memo(
   ({
@@ -219,11 +233,48 @@ const OrderRow = memo(
     onEdit,
     getStatusBadge,
   }) => {
+    // Format the order items for display
+    const itemsDisplay = formatOrderItems(order.items)
+
+    // Truncate delivery address if it's too long
+    const truncateAddress = (address) => {
+      return address.length > 30 ? `${address.substring(0, 30)}...` : address
+    }
+
     return (
       <TableRow key={order.id}>
         <TableCell className="font-medium">#{order.id}</TableCell>
         <TableCell>{format(new Date(order.date), "MMM d, yyyy")}</TableCell>
         <TableCell>{order.customer_name}</TableCell>
+        <TableCell>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger className="text-left">{truncateAddress(order.delivery_address)}</TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs">{order.delivery_address}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </TableCell>
+        <TableCell>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger className="text-left">{itemsDisplay}</TooltipTrigger>
+              <TooltipContent>
+                <div className="max-w-xs">
+                  <p className="font-bold mb-1">Order Items:</p>
+                  <ul className="list-disc pl-4">
+                    {order.items.map((item, idx) => (
+                      <li key={idx}>
+                        {item.quantity}x {item.name} (${item.price.toFixed(2)} each)
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </TableCell>
         <TableCell>{format(new Date(order.delivery_date), "MMM d, yyyy")}</TableCell>
         <TableCell>{order.kitchen_location}</TableCell>
         <TableCell>{order.chef_name || "Not assigned"}</TableCell>
@@ -282,102 +333,114 @@ const OrderTable = memo(
     getSortDirectionIcon,
   }) => {
     return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>
-              <button
-                className="flex items-center font-semibold text-left"
-                onClick={() => requestSort("id")}
-                aria-label="Sort by ID"
-              >
-                Order ID {getSortDirectionIcon("id")}
-              </button>
-            </TableHead>
-            <TableHead>
-              <button
-                className="flex items-center font-semibold text-left"
-                onClick={() => requestSort("date")}
-                aria-label="Sort by date"
-              >
-                Date {getSortDirectionIcon("date")}
-              </button>
-            </TableHead>
-            <TableHead>
-              <button
-                className="flex items-center font-semibold text-left"
-                onClick={() => requestSort("customer_name")}
-                aria-label="Sort by customer"
-              >
-                Customer {getSortDirectionIcon("customer_name")}
-              </button>
-            </TableHead>
-            <TableHead>
-              <button
-                className="flex items-center font-semibold text-left"
-                onClick={() => requestSort("delivery_date")}
-                aria-label="Sort by delivery date"
-              >
-                Delivery Date {getSortDirectionIcon("delivery_date")}
-              </button>
-            </TableHead>
-            <TableHead>
-              <button
-                className="flex items-center font-semibold text-left"
-                onClick={() => requestSort("kitchen_location")}
-                aria-label="Sort by kitchen location"
-              >
-                Kitchen {getSortDirectionIcon("kitchen_location")}
-              </button>
-            </TableHead>
-            <TableHead>Chef</TableHead>
-            <TableHead>
-              <button
-                className="flex items-center font-semibold text-left"
-                onClick={() => requestSort("total")}
-                aria-label="Sort by total"
-              >
-                Total {getSortDirectionIcon("total")}
-              </button>
-            </TableHead>
-            <TableHead>
-              <button
-                className="flex items-center font-semibold text-left"
-                onClick={() => requestSort("status")}
-                aria-label="Sort by status"
-              >
-                Status {getSortDirectionIcon("status")}
-              </button>
-            </TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {orders.length === 0 ? (
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={9} className="h-24 text-center">
-                No orders found.
-              </TableCell>
+              <TableHead>
+                <button
+                  className="flex items-center font-semibold text-left"
+                  onClick={() => requestSort("id")}
+                  aria-label="Sort by ID"
+                >
+                  Order ID {getSortDirectionIcon("id")}
+                </button>
+              </TableHead>
+              <TableHead>
+                <button
+                  className="flex items-center font-semibold text-left"
+                  onClick={() => requestSort("date")}
+                  aria-label="Sort by date"
+                >
+                  Date {getSortDirectionIcon("date")}
+                </button>
+              </TableHead>
+              <TableHead>
+                <button
+                  className="flex items-center font-semibold text-left"
+                  onClick={() => requestSort("customer_name")}
+                  aria-label="Sort by customer"
+                >
+                  Customer {getSortDirectionIcon("customer_name")}
+                </button>
+              </TableHead>
+              <TableHead>
+                <button
+                  className="flex items-center font-semibold text-left"
+                  onClick={() => requestSort("delivery_address")}
+                  aria-label="Sort by delivery address"
+                >
+                  Delivery Address {getSortDirectionIcon("delivery_address")}
+                </button>
+              </TableHead>
+              <TableHead>Items</TableHead>
+              <TableHead>
+                <button
+                  className="flex items-center font-semibold text-left"
+                  onClick={() => requestSort("delivery_date")}
+                  aria-label="Sort by delivery date"
+                >
+                  Delivery Date {getSortDirectionIcon("delivery_date")}
+                </button>
+              </TableHead>
+              <TableHead>
+                <button
+                  className="flex items-center font-semibold text-left"
+                  onClick={() => requestSort("kitchen_location")}
+                  aria-label="Sort by kitchen location"
+                >
+                  Kitchen {getSortDirectionIcon("kitchen_location")}
+                </button>
+              </TableHead>
+              <TableHead>Chef</TableHead>
+              <TableHead>
+                <button
+                  className="flex items-center font-semibold text-left"
+                  onClick={() => requestSort("total")}
+                  aria-label="Sort by total"
+                >
+                  Total {getSortDirectionIcon("total")}
+                </button>
+              </TableHead>
+              <TableHead>
+                <button
+                  className="flex items-center font-semibold text-left"
+                  onClick={() => requestSort("status")}
+                  aria-label="Sort by status"
+                >
+                  Status {getSortDirectionIcon("status")}
+                </button>
+              </TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
-          ) : (
-            orders.map((order) => (
-              <OrderRow
-                key={order.id}
-                order={order}
-                processingOrders={processingOrders}
-                inventoryStatus={inventoryStatus}
-                checkingInventory={checkingInventory}
-                onAction={onAction}
-                onRevert={onRevert}
-                onAssignChef={onAssignChef}
-                onDelete={onDelete}
-                onEdit={onEdit}
-                getStatusBadge={getStatusBadge}
-              />
-            ))
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {orders.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={11} className="h-24 text-center">
+                  No orders found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              orders.map((order) => (
+                <OrderRow
+                  key={order.id}
+                  order={order}
+                  processingOrders={processingOrders}
+                  inventoryStatus={inventoryStatus}
+                  checkingInventory={checkingInventory}
+                  onAction={onAction}
+                  onRevert={onRevert}
+                  onAssignChef={onAssignChef}
+                  onDelete={onDelete}
+                  onEdit={onEdit}
+                  getStatusBadge={getStatusBadge}
+                />
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     )
   },
 )
@@ -722,10 +785,10 @@ export default function OrdersPage() {
       return [...localOrders].sort((a, b) => {
         const key = sortConfig.key as keyof typeof a
 
-        if (key === "date") {
+        if (key === "date" || key === "delivery_date") {
           return sortConfig.direction === "ascending"
-            ? new Date(a.date).getTime() - new Date(b.date).getTime()
-            : new Date(b.date).getTime() - new Date(a.date).getTime()
+            ? new Date(a[key]).getTime() - new Date(b[key]).getTime()
+            : new Date(b[key]).getTime() - new Date(a[key]).getTime()
         }
 
         if (a[key] < b[key]) {
@@ -749,8 +812,11 @@ export default function OrdersPage() {
         const matchesSearch =
           order.id.toString().includes(searchQuery) ||
           order.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          order.delivery_address.toLowerCase().includes(searchQuery.toLowerCase()) ||
           (order.status && order.status.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          order.total.toString().includes(searchQuery)
+          order.total.toString().includes(searchQuery) ||
+          // Search in order items
+          order.items.some((item) => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
 
         const matchesStatus = filterStatus === "all" || order.status === filterStatus
 
@@ -1326,7 +1392,7 @@ export default function OrdersPage() {
         format(new Date(order.delivery_date), "yyyy-MM-dd"),
         order.kitchen_location,
         order.chef_name || "Not assigned",
-        order.items.length,
+        order.items.map((item) => `${item.quantity}x ${item.name}`).join("; "),
         order.total.toFixed(2),
         order.status,
         order.notes || "",
@@ -1426,7 +1492,7 @@ export default function OrdersPage() {
           </label>
           <Input
             id="search-orders"
-            placeholder="Search by ID, customer, status..."
+            placeholder="Search by ID, customer, address, items..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full"

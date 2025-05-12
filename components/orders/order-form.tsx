@@ -2,14 +2,14 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus, Trash2 } from "lucide-react"
+import { Plus, Trash2, AlertTriangle } from "lucide-react"
 import { useData } from "@/lib/context/data-context"
 import { DialogClose } from "@/components/ui/dialog"
 import { useAuth } from "@/lib/auth-context"
@@ -19,6 +19,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { toast } from "@/components/ui/use-toast"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function OrderForm() {
   const { menuItems = [], addOrder, chefs = [] } = useData()
@@ -37,8 +38,29 @@ export default function OrderForm() {
   const [selectedMenuItem, setSelectedMenuItem] = useState("")
   const [quantity, setQuantity] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [belowMinimumQuantity, setBelowMinimumQuantity] = useState(false)
+  const [minimumQuantity, setMinimumQuantity] = useState(0)
 
   const kitchenLocations = ["Main Kitchen", "Downtown Kitchen", "Catering Kitchen", "Event Kitchen"]
+
+  // Check if the selected quantity is below the minimum order quantity
+  useEffect(() => {
+    if (selectedMenuItem) {
+      const menuItemId = Number.parseInt(selectedMenuItem)
+      const menuItem = menuItems.find((item) => item.id === menuItemId)
+
+      if (menuItem && menuItem.minimum_order_quantity) {
+        setMinimumQuantity(menuItem.minimum_order_quantity)
+        setBelowMinimumQuantity(quantity < menuItem.minimum_order_quantity)
+      } else {
+        setBelowMinimumQuantity(false)
+        setMinimumQuantity(0)
+      }
+    } else {
+      setBelowMinimumQuantity(false)
+      setMinimumQuantity(0)
+    }
+  }, [selectedMenuItem, quantity, menuItems])
 
   const handleChange = (field: string, value: any) => {
     setFormData({
@@ -86,6 +108,7 @@ export default function OrderForm() {
     // Reset selection
     setSelectedMenuItem("")
     setQuantity(1)
+    setBelowMinimumQuantity(false)
   }
 
   const removeItem = (index: number) => {
@@ -295,6 +318,16 @@ export default function OrderForm() {
               </Button>
             </div>
           </div>
+
+          {belowMinimumQuantity && (
+            <Alert variant="warning" className="bg-amber-50 border-amber-200 text-amber-800">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <AlertDescription>
+                The minimum order quantity for this item is {minimumQuantity}. You can still add it, but it's below the
+                recommended minimum.
+              </AlertDescription>
+            </Alert>
+          )}
 
           {formData.items.length > 0 ? (
             <div className="border rounded-lg overflow-hidden">
