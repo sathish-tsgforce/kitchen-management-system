@@ -7,12 +7,13 @@ import { Slider } from "@/components/ui/slider"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { Info, AlertTriangle, CheckCircle } from "lucide-react"
+import { Info, AlertTriangle, CheckCircle, Minus, Plus } from "lucide-react"
 import { useIngredients } from "@/lib/hooks/use-ingredients"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useTextSize } from "@/lib/context/text-size-context"
 import { TextSizeControls } from "@/components/accessibility/text-size-controls"
+import { Button } from "@/components/ui/button"
 import type { Recipe } from "@/lib/types"
 
 interface RecipeCalculatorProps {
@@ -58,6 +59,20 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
     }
   }
 
+  // Increment/decrement serving size
+  const incrementServingSize = () => {
+    const maxValue = Math.max(50, recipe.standard_serving_pax * 3)
+    if (servingSize < maxValue) {
+      setServingSize(servingSize + 1)
+    }
+  }
+
+  const decrementServingSize = () => {
+    if (servingSize > 1) {
+      setServingSize(servingSize - 1)
+    }
+  }
+
   // Apply text size classes based on the current text size
   const getTextSizeClasses = () => {
     switch (textSize) {
@@ -88,7 +103,20 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
     }
   }
 
+  // Get button size based on text size
+  const getButtonSize = () => {
+    switch (textSize) {
+      case "large":
+        return "h-11 w-11"
+      case "x-large":
+        return "h-12 w-12"
+      default:
+        return "h-10 w-10"
+    }
+  }
+
   const textClasses = getTextSizeClasses()
+  const buttonSize = getButtonSize()
 
   // Parse quantity string to extract numeric value and unit
   function parseQuantity(quantityStr: string) {
@@ -137,7 +165,10 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
 
   // Calculate slider marks for standard pax
   const sliderMax = Math.max(50, recipe.standard_serving_pax * 3)
-  const standardPaxPercentage = (recipe.standard_serving_pax / sliderMax) * 100
+
+  // Calculate the exact position for the standard pax marker
+  // This ensures the marker aligns exactly with where the slider stops
+  const standardPaxPercentage = ((recipe.standard_serving_pax - 1) / (sliderMax - 1)) * 100
 
   return (
     <div className="space-y-6">
@@ -148,11 +179,14 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
         <TextSizeControls />
       </div>
 
-      <Card>
+      <Card className="w-full">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <span className={textClasses.heading}>Serving Size Adjustment</span>
-            <Badge variant={shortageCount > 0 ? "destructive" : "success"} className="ml-2">
+            <Badge
+              variant={shortageCount > 0 ? "destructive" : "success"}
+              className="ml-0 mt-2 sm:mt-0 sm:ml-2 inline-flex self-start sm:self-auto"
+            >
               {shortageCount > 0
                 ? `${shortageCount} shortage${shortageCount > 1 ? "s" : ""}`
                 : `All ingredients available`}
@@ -183,7 +217,7 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
 
           <div className="mb-8">
             <div className="flex flex-col space-y-4">
-              <div className="flex justify-between mb-2">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                 <Label htmlFor="serving-size-input" className={`${textClasses.subheading} font-medium`}>
                   Serving Size
                 </Label>
@@ -192,8 +226,8 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
                 </span>
               </div>
 
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="flex-1 w-full">
                   <div className="relative" ref={sliderRef} aria-hidden="true">
                     <Slider
                       value={[servingSize]}
@@ -207,7 +241,7 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
                       aria-labelledby="serving-size-label"
                     />
 
-                    {/* Standard pax marker */}
+                    {/* Standard pax marker - adjusted for exact alignment */}
                     <div
                       className="absolute top-1/2 w-1 h-6 bg-blue-600 -translate-y-1/2 pointer-events-none"
                       style={{ left: `${standardPaxPercentage}%` }}
@@ -228,21 +262,51 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
                   </div>
                 </div>
 
-                <div className="w-24">
-                  <Label htmlFor="serving-size-input" className="sr-only">
-                    Enter serving size
-                  </Label>
-                  <Input
-                    id="serving-size-input"
-                    type="number"
-                    min="1"
-                    max={sliderMax}
-                    value={inputValue}
-                    onChange={handleInputChange}
-                    onBlur={handleInputBlur}
-                    className={`text-right ${textClasses.body}`}
-                    aria-labelledby="serving-size-label"
-                  />
+                <div className="flex items-center gap-2 mt-4 sm:mt-0">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={decrementServingSize}
+                    disabled={servingSize <= 1}
+                    className={buttonSize}
+                    aria-label="Decrease serving size"
+                  >
+                    <Minus
+                      className={textSize === "x-large" ? "h-6 w-6" : textSize === "large" ? "h-5 w-5" : "h-4 w-4"}
+                    />
+                  </Button>
+
+                  <div className="w-16 sm:w-20">
+                    <Label htmlFor="serving-size-input" className="sr-only">
+                      Enter serving size
+                    </Label>
+                    <Input
+                      id="serving-size-input"
+                      type="number"
+                      min="1"
+                      max={sliderMax}
+                      value={inputValue}
+                      onChange={handleInputChange}
+                      onBlur={handleInputBlur}
+                      className={`text-center ${textClasses.body}`}
+                      aria-labelledby="serving-size-label"
+                    />
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={incrementServingSize}
+                    disabled={servingSize >= sliderMax}
+                    className={buttonSize}
+                    aria-label="Increase serving size"
+                  >
+                    <Plus
+                      className={textSize === "x-large" ? "h-6 w-6" : textSize === "large" ? "h-5 w-5" : "h-4 w-4"}
+                    />
+                  </Button>
                 </div>
               </div>
             </div>
@@ -261,12 +325,10 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
                   }`}
                   role="listitem"
                 >
-                  <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
-                    <div>
-                      <p className={`font-medium ${textClasses.body}`}>{ingredient.name}</p>
-                    </div>
+                  <div className="flex flex-col gap-2">
+                    <p className={`font-medium ${textClasses.body}`}>{ingredient.name}</p>
 
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 gap-x-4 gap-y-1">
                       <div className={`font-semibold ${textClasses.body}`}>Needed:</div>
                       <div
                         className={`${ingredient.isShortage ? "text-red-700 font-bold" : "text-green-700 font-bold"} ${textClasses.body}`}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Calculator, Edit } from "lucide-react"
+import { ArrowLeft, Calculator, Edit, Utensils } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import RecipeIngredients from "@/components/recipes/recipe-ingredients"
@@ -12,6 +12,7 @@ import DeleteRecipeButton from "@/components/recipes/delete-recipe-button"
 import { fetchRecipeById } from "@/lib/api/recipes"
 import { useTextSize } from "@/lib/context/text-size-context"
 import { TextSizeControls } from "@/components/accessibility/text-size-controls"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface RecipeDetailsProps {
   recipeId: number
@@ -55,6 +56,7 @@ export default function RecipeDetails({ recipeId }: RecipeDetailsProps) {
           subheading: "text-3xl",
           body: "text-xl",
           detail: "text-lg",
+          title: "text-5xl",
         }
       case "x-large":
         return {
@@ -62,6 +64,7 @@ export default function RecipeDetails({ recipeId }: RecipeDetailsProps) {
           subheading: "text-4xl",
           body: "text-2xl",
           detail: "text-xl",
+          title: "text-6xl",
         }
       default:
         return {
@@ -69,6 +72,7 @@ export default function RecipeDetails({ recipeId }: RecipeDetailsProps) {
           subheading: "text-2xl",
           body: "text-lg",
           detail: "text-base",
+          title: "text-4xl",
         }
     }
   }
@@ -151,27 +155,54 @@ export default function RecipeDetails({ recipeId }: RecipeDetailsProps) {
         <TextSizeControls />
       </div>
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <h1 className={`${textClasses.heading} font-bold text-gray-900`}>{recipe.name}</h1>
-        <div className="flex flex-wrap gap-4">
-          <Link href={`/recipes/${recipe.id}/calculator`}>
-            <Button variant="outline" className="border-blue-700 text-blue-700 hover:bg-blue-50">
-              <Calculator className="mr-2 h-5 w-5" />
-              <span className={textClasses.detail}>Serving Calculator</span>
-            </Button>
-          </Link>
-          <Link href={`/recipes/${recipe.id}/edit`}>
-            <Button variant="outline" className="border-green-700 text-green-700 hover:bg-green-50">
-              <Edit className="mr-2 h-5 w-5" />
-              <span className={textClasses.detail}>Edit Recipe</span>
-            </Button>
-          </Link>
-          <DeleteRecipeButton recipeId={recipe.id} recipeName={recipe.name} onSuccess={() => router.push("/")} />
-        </div>
-      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Left column - Recipe info */}
+        <div className="md:col-span-2 space-y-8">
+          {/* Recipe header section */}
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <h1 className={`${textClasses.title} font-bold text-gray-900`}>{recipe.name}</h1>
+              <div className="flex flex-wrap gap-2">
+                <Button asChild variant="outline" size="sm" className="h-9">
+                  <Link href={`/recipes/${recipe.id}/calculator`}>
+                    <Calculator className="mr-2 h-4 w-4" />
+                    Serving Calculator
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="sm" className="h-9">
+                  <Link href={`/recipes/${recipe.id}/edit`}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit Recipe
+                  </Link>
+                </Button>
+              </div>
+            </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-        <div className="lg:col-span-1">
+            {/* Rest of the header section */}
+          </div>
+
+          <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
+            <h2 className={`${textClasses.subheading} font-bold text-gray-900 mb-6`}>Preparation Steps</h2>
+            <RecipeSteps steps={recipe.steps} textSize={textSize} />
+          </div>
+
+          {/* Rest of the left column */}
+        </div>
+
+        {/* Right column - Ingredients */}
+        <div className="space-y-6">
+          {/* Ingredients section */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className={`${textClasses.heading} flex items-center`}>
+                <Utensils className="mr-2 h-5 w-5" />
+                Ingredients
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RecipeIngredients ingredients={recipe.ingredients} textSize={textSize} />
+            </CardContent>
+          </Card>
           <div className="bg-white border-2 border-gray-200 rounded-xl p-6 mb-6">
             <h2 className={`${textClasses.subheading} font-bold text-gray-900 mb-4`}>Details</h2>
             <div className="space-y-4">
@@ -189,18 +220,8 @@ export default function RecipeDetails({ recipeId }: RecipeDetailsProps) {
               )}
             </div>
           </div>
-
-          <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
-            <h2 className={`${textClasses.subheading} font-bold text-gray-900 mb-4`}>Ingredients</h2>
-            <RecipeIngredients ingredients={recipe.ingredients} textSize={textSize} />
-          </div>
-        </div>
-
-        <div className="lg:col-span-2">
-          <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
-            <h2 className={`${textClasses.subheading} font-bold text-gray-900 mb-6`}>Preparation Steps</h2>
-            <RecipeSteps steps={recipe.steps} textSize={textSize} />
-          </div>
+          <DeleteRecipeButton recipeId={recipe.id} recipeName={recipe.name} onSuccess={() => router.push("/")} />
+          {/* Rest of the right column */}
         </div>
       </div>
     </main>

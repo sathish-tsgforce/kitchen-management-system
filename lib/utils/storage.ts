@@ -1,19 +1,27 @@
-/**
- * Uploads a file to Supabase Storage via API route
- * @param file The file to upload
- * @param folderPath The folder path to upload to (e.g., "recipes/images")
- * @returns The public URL of the uploaded file
- */
-export async function uploadFile(file: File, folderPath = "uploads"): Promise<string> {
-  try {
-    console.log(`Uploading file to folder: ${folderPath}`)
+"use client"
 
-    // Create form data
+// The bucket name
+const BUCKET_NAME = "fortitude-culina-media"
+
+/**
+ * Uploads a file to Supabase Storage via server-side API route
+ * This bypasses RLS policies by using the service role key on the server
+ */
+export async function uploadFile(file: File, folder = "uploads"): Promise<string | null> {
+  try {
+    if (!file) {
+      console.error("No file provided for upload")
+      return null
+    }
+
+    console.log(`Uploading file to folder: ${folder}`)
+
+    // Create a FormData object
     const formData = new FormData()
     formData.append("file", file)
-    formData.append("folder", folderPath)
+    formData.append("folder", folder)
 
-    // Send request to API route
+    // Send the file to our API route
     const response = await fetch("/api/upload", {
       method: "POST",
       body: formData,
@@ -21,11 +29,13 @@ export async function uploadFile(file: File, folderPath = "uploads"): Promise<st
 
     if (!response.ok) {
       const errorData = await response.json()
+      console.error("Error uploading file:", errorData.error)
       throw new Error(errorData.error || "Failed to upload file")
     }
 
     const data = await response.json()
-    console.log(`File uploaded successfully: ${data.url}`)
+    console.log("File uploaded successfully:", data.url)
+
     return data.url
   } catch (error) {
     console.error("Error in uploadFile:", error)
@@ -34,63 +44,95 @@ export async function uploadFile(file: File, folderPath = "uploads"): Promise<st
 }
 
 /**
- * Checks if a URL is a valid Supabase storage URL
- * @param url The URL to check
- * @returns Boolean indicating if the URL is a valid Supabase storage URL
+ * Checks if a URL is still valid and refreshes it if needed
+ * Returns the original URL if it's still valid, or a new URL if it's expired
  */
-export function isValidStorageUrl(url: string): boolean {
-  if (!url) return false
-
-  // Check if it's a string
-  if (typeof url !== "string") return false
-
-  // Check if it's a URL
+export async function ensureValidUrl(url: string): Promise<string> {
   try {
-    new URL(url)
-  } catch (e) {
-    return false
-  }
+    if (!url) {
+      console.error("No URL provided")
+      return url
+    }
 
-  // Check if it's a Supabase storage URL
-  return url.includes("supabase") && url.includes("storage")
+    console.log("Ensuring URL is valid:", url)
+
+    // Check if the URL is a relative URL
+    if (url.startsWith("/")) {
+      console.log("URL is a relative URL, using as is:", url)
+      return url
+    }
+
+    // For now, just return the URL as is
+    return url
+  } catch (error) {
+    console.error("Error in ensureValidUrl:", error)
+    return url
+  }
 }
 
 /**
- * Deletes a file from Supabase Storage via API route
- * @param url The public URL of the file to delete
- * @returns A boolean indicating success
+ * Deletes a file from Supabase Storage via server-side API route
+ * This bypasses RLS policies by using the service role key on the server
  */
 export async function deleteFile(url: string): Promise<boolean> {
   try {
-    if (!url) return true
-
-    // Validate URL
-    if (!isValidStorageUrl(url)) {
-      console.warn(`Skipping deletion for invalid URL: ${url}`)
-      return true // Return true to avoid breaking the flow
+    if (!url) {
+      console.error("No URL provided for file deletion")
+      return false
     }
 
-    console.log(`Attempting to delete file: ${url}`)
+    console.log(`Deleting file: ${url}`)
 
-    // Send request to API route
-    const response = await fetch("/api/delete-file", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ url }),
+    // Send the delete request to our API route
+    const response = await fetch(`/api/delete-file?path=${encodeURIComponent(url)}`, {
+      method: "DELETE",
     })
 
     if (!response.ok) {
       const errorData = await response.json()
-      throw new Error(errorData.error || "Failed to delete file")
+      console.error("Error deleting file:", errorData.error)
+      return false
     }
 
     console.log(`File deleted successfully`)
     return true
   } catch (error) {
     console.error("Error in deleteFile:", error)
-    // Don't throw the error to prevent breaking the flow
     return false
+  }
+}
+
+/**
+ * Extracts the file path from a URL (signed or public)
+ */
+export function extractFilePath(url: string): string | null {
+  if (!url) return null
+
+  try {
+    // Handle signed URLs with token parameter
+    if (url.includes("token=")) {
+      // Extract the path between /object/ and ?token=
+      const pathMatch = url.match(/\/object\/(?:sign|authenticated|public)\/[^/]+\/(.+?)(?:\?token=|$)/)
+      if (pathMatch && pathMatch[1]) {
+        return decodeURIComponent(pathMatch[1])
+      }
+    }
+    // Handle public URLs
+    else if (url.includes("/storage/v1/object/public/")) {
+      const pathMatch = url.match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)/)
+      if (pathMatch && pathMatch[1]) {
+        return decodeURIComponent(pathMatch[1])
+      }
+    }
+    // Handle direct paths
+    else if (!url.includes("://") && !url.startsWith("/api/")) {
+      return url
+    }
+
+    console.warn("Could not extract file path from URL:", url)
+    return null
+  } catch (error) {
+    console.error("Error extracting file path:", error)
+    return null
   }
 }

@@ -3,10 +3,14 @@ import { createClient } from "@supabase/supabase-js"
 import { v4 as uuidv4 } from "uuid"
 
 // Create a Supabase client with the service role key for admin access
+// This bypasses RLS policies for uploads
 const supabaseAdmin = createClient(process.env.SUPABASE_URL || "", process.env.SUPABASE_SERVICE_ROLE_KEY || "")
 
 // The exact bucket name
 const BUCKET_NAME = "fortitude-culina-media"
+
+// URL validity duration in seconds (7 days)
+const URL_EXPIRY_SECONDS = 7 * 24 * 60 * 60
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,6 +34,7 @@ export async function POST(request: NextRequest) {
     const buffer = new Uint8Array(arrayBuffer)
 
     // Upload to Supabase using the admin client with service role key
+    // This bypasses RLS policies
     const { data, error } = await supabaseAdmin.storage.from(BUCKET_NAME).upload(filePath, buffer, {
       contentType: file.type,
       cacheControl: "3600",
@@ -41,11 +46,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Get the public URL
-    const { data: urlData } = supabaseAdmin.storage.from(BUCKET_NAME).getPublicUrl(data.path)
+    // Generate a signed URL that expires in 7 days
+    const { data: signedUrlData, error: signedUrlError } = await supabaseAdmin.storage
+      .from(BUCKET_NAME)
+      .createSignedUrl(data.path, URL_EXPIRY_SECONDS)
 
-    console.log(`File uploaded successfully: ${urlData.publicUrl}`)
-    return NextResponse.json({ url: urlData.publicUrl })
+    if (signedUrlError) {
+      console.error("Error generating signed URL:", signedUrlError)
+      return NextResponse.json({ error: signedUrlError.message }, { status: 500 })
+    }
+
+    console.log(`File uploaded successfully: ${signedUrlData.signedUrl}`)
+
+    // Return the signed URL
+    return NextResponse.json({
+      url: signedUrlData.signedUrl,
+      path: data.path,
+    })
   } catch (error: any) {
     console.error("Error in upload API:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })

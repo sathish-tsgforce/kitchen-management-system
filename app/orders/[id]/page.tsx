@@ -83,11 +83,21 @@ export default function OrderPage({ params }: OrderPageProps) {
   // Processing state
   const [processingActions, setProcessingActions] = useState<Record<string, boolean>>({})
 
+  // Track if component is mounted
+  const isMounted = useRef(true)
+
   // Refs
   const dataLoaded = useRef(false)
   const inventoryChecked = useRef(false)
 
   const orderId = Number.parseInt(params.id)
+
+  // Set up cleanup function for component unmount
+  useEffect(() => {
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
 
   // Load order data and check inventory on mount
   useEffect(() => {
@@ -133,9 +143,11 @@ export default function OrderPage({ params }: OrderPageProps) {
           total,
         } as Order
 
-        setOrder(fullOrder)
-        setError(null)
-        dataLoaded.current = true
+        if (isMounted.current) {
+          setOrder(fullOrder)
+          setError(null)
+          dataLoaded.current = true
+        }
 
         // Fetch chefs
         const { data: rolesData, error: rolesError } = await supabase
@@ -155,13 +167,19 @@ export default function OrderPage({ params }: OrderPageProps) {
             .eq("role_id", chefRoleId)
 
           if (chefsError) throw chefsError
-          setChefs(chefsData || [])
+          if (isMounted.current) {
+            setChefs(chefsData || [])
+          }
         }
       } catch (err) {
         console.error("Error loading order:", err)
-        setError(`Failed to load order: ${err.message || "Unknown error"}`)
+        if (isMounted.current) {
+          setError(`Failed to load order: ${err.message || "Unknown error"}`)
+        }
       } finally {
-        setLoading(false)
+        if (isMounted.current) {
+          setLoading(false)
+        }
       }
     }
 
@@ -195,7 +213,9 @@ export default function OrderPage({ params }: OrderPageProps) {
     try {
       // Check if there is sufficient inventory for the order
       const result = checkInventoryForOrder(order, recipes, ingredients)
-      setInventoryStatus(result)
+      if (isMounted.current) {
+        setInventoryStatus(result)
+      }
       return result
     } catch (error) {
       console.error("Error checking inventory:", error)
@@ -206,7 +226,9 @@ export default function OrderPage({ params }: OrderPageProps) {
       })
       return null
     } finally {
-      setIsCheckingInventory(false)
+      if (isMounted.current) {
+        setIsCheckingInventory(false)
+      }
       console.timeEnd("checkInventory")
       console.log("🔍 checkInventory - END")
     }
@@ -222,7 +244,7 @@ export default function OrderPage({ params }: OrderPageProps) {
         // 1. IMMEDIATELY close dialog and update UI state
         console.log("🔍 Closing dialog")
         console.time("closeDialog")
-        setDialogState((prev) => ({ ...prev, actionDialogOpen: false }))
+        setDialogState((prev) => ({ ...prev, actionDialogOpen: false, actionType: null }))
         console.timeEnd("closeDialog")
 
         console.log("🔍 Setting processing state")
@@ -265,7 +287,9 @@ export default function OrderPage({ params }: OrderPageProps) {
               description: "This order cannot be accepted due to insufficient ingredients.",
               variant: "destructive",
             })
-            setIsProcessing(false)
+            if (isMounted.current) {
+              setIsProcessing(false)
+            }
             console.timeEnd("updateOrderStatus")
             console.log("🔍 updateOrderStatus - END (early return due to inventory)")
             return
@@ -322,20 +346,34 @@ export default function OrderPage({ params }: OrderPageProps) {
           .finally(() => {
             // 6. Always clean up processing state and refresh data
             console.log("🔍 Cleaning up processing state")
-            setIsProcessing(false)
+            if (isMounted.current) {
+              setIsProcessing(false)
+            }
             console.log("🔍 Refreshing data")
             refreshData()
             console.timeEnd("updateOrderStatus")
             console.log("🔍 updateOrderStatus - END")
+
+            // Force a re-render to ensure UI is responsive
+            if (isMounted.current) {
+              // Use a small timeout to ensure state updates have propagated
+              setTimeout(() => {
+                if (isMounted.current) {
+                  setActiveTab(activeTab) // This is a no-op that forces a re-render
+                }
+              }, 50)
+            }
           })
       } catch (error) {
         console.error("Error in updateOrderStatus:", error)
-        setIsProcessing(false)
+        if (isMounted.current) {
+          setIsProcessing(false)
+        }
         console.timeEnd("updateOrderStatus")
         console.log("🔍 updateOrderStatus - END (with error)")
       }
     },
-    [orderId, order, refreshData, toast, ingredients, recipes, inventoryStatus],
+    [orderId, order, refreshData, toast, ingredients, recipes, inventoryStatus, activeTab],
   )
 
   // Helper function to process inventory updates in batches
@@ -444,33 +482,42 @@ export default function OrderPage({ params }: OrderPageProps) {
       return
     }
 
-    let status = ""
-    switch (dialogState.actionType) {
-      case "complete":
-        status = "completed"
-        break
-      case "cancel":
-        status = "cancelled"
-        break
-      case "accept":
-        status = "accepted"
-        break
-      case "in_progress":
-        status = "in_progress"
-        break
-      case "revert":
-        status = "pending"
-        break
-    }
+    // Close dialog immediately to prevent UI freezing
+    setDialogState((prev) => ({ ...prev, actionDialogOpen: false }))
 
-    console.log(`🔍 confirmAction - Calling updateOrderStatus with status: ${status}`)
+    // Use setTimeout with 0ms to move this to the next event loop cycle
+    // This ensures the UI updates before heavy operations
+    setTimeout(() => {
+      if (!isMounted.current) return
 
-    // For revert action, pass the restore inventory flag
-    if (dialogState.actionType === "revert") {
-      updateOrderStatus(status, restoreInventory)
-    } else {
-      updateOrderStatus(status, false)
-    }
+      let status = ""
+      switch (dialogState.actionType) {
+        case "complete":
+          status = "completed"
+          break
+        case "cancel":
+          status = "cancelled"
+          break
+        case "accept":
+          status = "accepted"
+          break
+        case "in_progress":
+          status = "in_progress"
+          break
+        case "revert":
+          status = "pending"
+          break
+      }
+
+      console.log(`🔍 confirmAction - Calling updateOrderStatus with status: ${status}`)
+
+      // For revert action, pass the restore inventory flag
+      if (dialogState.actionType === "revert") {
+        updateOrderStatus(status, restoreInventory)
+      } else {
+        updateOrderStatus(status, false)
+      }
+    }, 0)
 
     console.timeEnd("confirmAction")
     console.log("🔍 confirmAction - END")
@@ -519,11 +566,19 @@ export default function OrderPage({ params }: OrderPageProps) {
   }, [])
 
   // Handle order action
-  const handleAction = (actionType: "complete" | "cancel" | "accept" | "in_progress" | "revert") => {
+  const handleAction = useCallback((actionType: "complete" | "cancel" | "accept" | "in_progress" | "revert") => {
     console.log(`🔍 handleAction - START (${actionType})`)
-    setDialogState((prev) => ({ ...prev, actionDialogOpen: true, actionType }))
+
+    // Use setTimeout with 0ms to move this to the next event loop cycle
+    // This ensures the UI updates before heavy operations
+    setTimeout(() => {
+      if (isMounted.current) {
+        setDialogState((prev) => ({ ...prev, actionDialogOpen: true, actionType }))
+      }
+    }, 0)
+
     console.log("🔍 handleAction - END")
-  }
+  }, [])
 
   // Replace the assignChef function with this implementation
   const assignChef = useCallback(() => {
@@ -623,19 +678,33 @@ export default function OrderPage({ params }: OrderPageProps) {
         .finally(() => {
           // 5. Always clean up processing state and refresh data
           console.log("🔍 Cleaning up chef processing state")
-          setIsProcessing(false)
+          if (isMounted.current) {
+            setIsProcessing(false)
+          }
           console.log("🔍 Refreshing data after chef update")
           refreshData()
           console.timeEnd("assignChef")
           console.log("🔍 assignChef - END")
+
+          // Force a re-render to ensure UI is responsive
+          if (isMounted.current) {
+            // Use a small timeout to ensure state updates have propagated
+            setTimeout(() => {
+              if (isMounted.current) {
+                setActiveTab(activeTab) // This is a no-op that forces a re-render
+              }
+            }, 50)
+          }
         })
     } catch (error) {
       console.error("Error in assignChef:", error)
-      setIsProcessing(false)
+      if (isMounted.current) {
+        setIsProcessing(false)
+      }
       console.timeEnd("assignChef")
       console.log("🔍 assignChef - END (with error)")
     }
-  }, [orderId, selectedChefId, chefs, refreshData, toast])
+  }, [orderId, selectedChefId, chefs, refreshData, toast, activeTab])
 
   // Show loading state
   if (loading) {
@@ -1035,8 +1104,15 @@ export default function OrderPage({ params }: OrderPageProps) {
       <AlertDialog
         open={dialogState.actionDialogOpen}
         onOpenChange={(open) => {
-          console.log(`🔍 Action dialog open state changing to: ${open}`)
-          setDialogState((prev) => ({ ...prev, actionDialogOpen: open }))
+          if (!open && !isProcessing) {
+            // Only update state if we're closing and not processing
+            console.log(`🔍 Action dialog open state changing to: ${open}`)
+            setTimeout(() => {
+              if (isMounted.current) {
+                setDialogState((prev) => ({ ...prev, actionDialogOpen: open }))
+              }
+            }, 0)
+          }
         }}
       >
         <AlertDialogContent>
@@ -1116,7 +1192,11 @@ export default function OrderPage({ params }: OrderPageProps) {
         open={dialogState.assignChefDialogOpen}
         onOpenChange={(open) => {
           console.log(`🔍 Chef dialog open state changing to: ${open}`)
-          setDialogState((prev) => ({ ...prev, assignChefDialogOpen: open }))
+          setTimeout(() => {
+            if (isMounted.current) {
+              setDialogState((prev) => ({ ...prev, assignChefDialogOpen: open }))
+            }
+          }, 0)
         }}
       >
         <AlertDialogContent>

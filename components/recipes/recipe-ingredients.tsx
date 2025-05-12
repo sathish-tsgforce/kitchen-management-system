@@ -40,9 +40,9 @@ export default function RecipeIngredients({ ingredients, textSize = "normal" }: 
   return (
     <ul className="space-y-3">
       {ingredients.map((ingredient) => (
-        <li key={ingredient.id} className={`${textClass} text-gray-800 flex justify-between`}>
+        <li key={ingredient.id} className={`${textClass} text-gray-800 flex flex-col sm:flex-row sm:justify-between`}>
           <span className="font-medium">{ingredient.name}</span>
-          <span>{formatQuantity(ingredient.quantity)}</span>
+          <span className="text-gray-600 sm:text-gray-800">{formatQuantity(ingredient.quantity)}</span>
         </li>
       ))}
     </ul>
