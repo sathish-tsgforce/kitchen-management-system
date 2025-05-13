@@ -619,6 +619,8 @@ Page components are organized by feature:
    }
    \`\`\`
 
+For detailed information about the user management system, including how Supabase Auth is integrated and the API endpoints, see [USER-MANAGEMENT.md](./USER-MANAGEMENT.md).
+
 ## API Structure
 
 ### API Routes

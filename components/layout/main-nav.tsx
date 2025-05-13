@@ -3,45 +3,60 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/lib/auth-context"
+
+interface NavItem {
+  id: string
+  title: string
+  href: string
+  disabled?: boolean
+}
 
 export function MainNav() {
   const pathname = usePathname()
+  const { allowedNavItems } = useAuth()
 
-  const routes = [
+  const items: NavItem[] = [
     {
-      href: "/",
-      label: "Recipes",
-      active: pathname === "/" || pathname.startsWith("/recipes"),
+      id: "recipes",
+      title: "Recipes",
+      href: "/recipes",
     },
     {
+      id: "inventory",
+      title: "Inventory",
       href: "/inventory",
-      label: "Inventory",
-      active: pathname === "/inventory",
     },
     {
+      id: "orders",
+      title: "Orders",
       href: "/orders",
-      label: "Orders",
-      active: pathname === "/orders" || pathname.startsWith("/orders/"),
     },
     {
+      id: "menu",
+      title: "Menu",
       href: "/menu",
-      label: "Menu",
-      active: pathname === "/menu" || pathname.startsWith("/menu/"),
     },
-  ]
+    {
+      id: "users",
+      title: "Users",
+      href: "/users",
+    },
+  ].filter((item) => allowedNavItems.includes(item.id))
 
   return (
     <nav className="flex items-center space-x-4 lg:space-x-6">
-      {routes.map((route) => (
+      {items.map((item) => (
         <Link
-          key={route.href}
-          href={route.href}
+          key={item.id}
+          href={item.href}
           className={cn(
-            "text-lg font-medium transition-colors hover:text-green-700",
-            route.active ? "text-green-700 font-bold" : "text-gray-700",
+            "text-lg font-medium transition-colors",
+            pathname?.startsWith(item.href) ? "font-bold text-green-700" : "font-bold text-green-700 hover:text-green-600",
+            item.disabled && "cursor-not-allowed opacity-80",
           )}
         >
-          {route.label}
+          {item.title}
         </Link>
       ))}
     </nav>
