@@ -3,60 +3,52 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { useAuth } from "@/lib/auth-context"
-
-interface NavItem {
-  id: string
-  title: string
-  href: string
-  disabled?: boolean
-}
+import { useTextSize } from "@/lib/context/text-size-context"
 
 export function MainNav() {
   const pathname = usePathname()
-  const { allowedNavItems } = useAuth()
+  const { textSize } = useTextSize()
 
-  const items: NavItem[] = [
+  const routes = [
     {
-      id: "recipes",
-      title: "Recipes",
       href: "/recipes",
+      label: "Recipes",
+      active: pathname === "/recipes" || pathname.startsWith("/recipes/"),
     },
     {
-      id: "inventory",
-      title: "Inventory",
       href: "/inventory",
+      label: "Inventory",
+      active: pathname === "/inventory",
     },
     {
-      id: "orders",
-      title: "Orders",
       href: "/orders",
+      label: "Orders",
+      active: pathname === "/orders" || pathname.startsWith("/orders/"),
     },
     {
-      id: "menu",
-      title: "Menu",
       href: "/menu",
+      label: "Menu",
+      active: pathname === "/menu" || pathname.startsWith("/menu/"),
     },
     {
-      id: "users",
-      title: "Users",
       href: "/users",
+      label: "Users",
+      active: pathname === "/users",
     },
-  ].filter((item) => allowedNavItems.includes(item.id))
+  ]
 
   return (
     <nav className="flex items-center space-x-4 lg:space-x-6">
-      {items.map((item) => (
+      {routes.map((route) => (
         <Link
-          key={item.id}
-          href={item.href}
+          key={route.href}
+          href={route.href}
           className={cn(
-            "text-lg font-medium transition-colors",
-            pathname?.startsWith(item.href) ? "text-green-600 font-semibold" : "text-green-500/80 hover:text-green-600",
-            item.disabled && "cursor-not-allowed opacity-80",
+            `text-${textSize} font-medium transition-colors hover:text-primary`,
+            route.active ? "text-black dark:text-white" : "text-muted-foreground",
           )}
         >
-          {item.title}
+          {route.label}
         </Link>
       ))}
     </nav>
