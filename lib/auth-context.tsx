@@ -58,6 +58,9 @@ interface AuthProviderProps {
   children: ReactNode
 }
 
+// Cache for user data to improve performance
+const userCache = new Map<string, AuthUser>()
+
 // Auth provider component
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null)
@@ -76,8 +79,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     [user],
   )
 
-  // Optimized user data fetching
+  // Optimized user data fetching with caching
   const fetchUserData = useCallback(async (userId: string) => {
+    // Check cache first
+    if (userCache.has(userId)) {
+      return userCache.get(userId)!
+    }
+
     try {
       // Use a single query to get user data with role
       const { data, error } = await supabase
@@ -114,7 +122,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const upperRoleName = roleName.toUpperCase() as UserRole
       const validRole = ROLE_PERMISSIONS[upperRoleName] ? upperRoleName : "STAFF"
 
-      return {
+      const userProfile = {
         id: data.id,
         email: data.email,
         username: data.email.split("@")[0],
@@ -122,6 +130,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         role: validRole,
         roleId: data.role_id,
       }
+
+      // Cache the user data
+      userCache.set(userId, userProfile)
+
+      return userProfile
     } catch (error) {
       console.error("[Auth] Error in fetchUserData:", error)
       return null
@@ -131,19 +144,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Initialize auth state - optimized for performance
   useEffect(() => {
     let isMounted = true
+    let initTimeout: NodeJS.Timeout
 
     const initAuth = async () => {
       if (!isMounted) return
+
+      // Set a timeout to ensure we don't block the UI
+      initTimeout = setTimeout(() => {
+        if (isMounted && isLoading) {
+          setIsLoading(false)
+        }
+      }, 2000)
 
       try {
         // Check for existing session - fast path
         const { data } = await supabase.auth.getSession()
 
         if (!data.session) {
-          setUser(null)
-          setIsLoading(false)
-          if (pathname !== "/login") {
-            router.push("/login")
+          if (isMounted) {
+            setUser(null)
+            setIsLoading(false)
+            clearTimeout(initTimeout)
+            if (pathname !== "/login") {
+              router.push("/login")
+            }
           }
           return
         }
@@ -155,6 +179,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           if (isMounted) {
             setUser(null)
             setIsLoading(false)
+            clearTimeout(initTimeout)
             if (pathname !== "/login") {
               router.push("/login")
             }
@@ -163,14 +188,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         // Set user and allowed nav items
-        setUser(userProfile)
-        setAllowedNavItems(ROLE_PERMISSIONS[userProfile.role].allowedNavItems)
-        setIsLoading(false)
+        if (isMounted) {
+          setUser(userProfile)
+          setAllowedNavItems(ROLE_PERMISSIONS[userProfile.role].allowedNavItems)
+          setIsLoading(false)
+          clearTimeout(initTimeout)
+        }
       } catch (error) {
         console.error("[Auth] Auth initialization error:", error)
         if (isMounted) {
           setUser(null)
           setIsLoading(false)
+          clearTimeout(initTimeout)
           if (pathname !== "/login") {
             router.push("/login")
           }
@@ -185,11 +214,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (!isMounted) return
 
       if (event === "SIGNED_IN" && session) {
+        // Use cached user data if available
         const userProfile = await fetchUserData(session.user.id)
 
         if (userProfile && isMounted) {
           setUser(userProfile)
           setAllowedNavItems(ROLE_PERMISSIONS[userProfile.role].allowedNavItems)
+          setIsLoading(false)
 
           if (pathname === "/login") {
             router.push("/")
@@ -198,6 +229,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else if (event === "SIGNED_OUT" && isMounted) {
         setUser(null)
         setAllowedNavItems([])
+        setIsLoading(false)
         if (pathname !== "/login") {
           router.push("/login")
         }
@@ -206,6 +238,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     return () => {
       isMounted = false
+      clearTimeout(initTimeout)
       authListener.subscription.unsubscribe()
     }
   }, [router, pathname, fetchUserData])
@@ -255,6 +288,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = async () => {
     try {
       await supabase.auth.signOut()
+      // Clear user cache on logout
+      userCache.clear()
       // Auth state listener will handle clearing the user and navigation
     } catch (error) {
       console.error("[Auth] Logout error:", error)

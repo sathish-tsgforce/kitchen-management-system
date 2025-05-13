@@ -3,32 +3,45 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
+import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { isLoading, refreshSession } = useAuth()
+  const [isCheckingSession, setIsCheckingSession] = useState(true)
+  const router = useRouter()
 
-  // Check for existing session on mount
+  // Quick session check on mount - with timeout to prevent UI freeze
   useEffect(() => {
+    const sessionTimeout = setTimeout(() => {
+      setIsCheckingSession(false) // Ensure fields are enabled even if check fails
+    }, 1000) // Max 1 second wait
+
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession()
-      if (data.session) {
-        // We have a session, redirect to home
-        window.location.href = "/"
+      try {
+        const { data } = await supabase.auth.getSession()
+        if (data.session) {
+          router.push("/")
+        }
+      } catch (error) {
+        console.error("Session check error:", error)
+      } finally {
+        clearTimeout(sessionTimeout)
+        setIsCheckingSession(false)
       }
     }
 
     checkSession()
-  }, [])
+
+    return () => clearTimeout(sessionTimeout)
+  }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,7 +55,7 @@ export default function LoginPage() {
     }
 
     try {
-      // First, look up the email associated with the username
+      // Optimized login flow - single database query
       const { data: userData, error: userError } = await supabase
         .from("users")
         .select("email")
@@ -55,11 +68,9 @@ export default function LoginPage() {
         return
       }
 
-      const email = userData.email
-
       // Sign in with email and password
       const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
+        email: userData.email,
         password,
       })
 
@@ -69,8 +80,8 @@ export default function LoginPage() {
         return
       }
 
-      // Successful login - force a full page refresh
-      window.location.href = "/"
+      // Successful login - navigate to home
+      router.push("/")
     } catch (err: any) {
       console.error("Login error:", err)
       setError(err.message || "An error occurred during login")
@@ -103,7 +114,7 @@ export default function LoginPage() {
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                disabled={isLoading || isSubmitting}
+                disabled={isSubmitting || isCheckingSession}
               />
             </div>
             <div>
@@ -120,7 +131,7 @@ export default function LoginPage() {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading || isSubmitting}
+                disabled={isSubmitting || isCheckingSession}
               />
             </div>
           </div>
@@ -131,12 +142,17 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="group relative flex w-full justify-center rounded-md border border-transparent bg-green-600 py-2 px-4 text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-              disabled={isLoading || isSubmitting}
+              disabled={isSubmitting || isCheckingSession}
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Signing in...
+                </>
+              ) : isCheckingSession ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading...
                 </>
               ) : (
                 "Sign in"
