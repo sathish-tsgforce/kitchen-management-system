@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { supabase, getAdminClient } from "@/lib/supabase"
+import { supabase, supabaseAdmin } from "@/lib/supabase"
 import { createHash } from "crypto"
 
 // Helper function to hash passwords
@@ -72,7 +72,10 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const userData = await request.json()
-    console.log("[API] POST /api/users: Creating new user")
+    console.log("[API] POST /api/users: Creating new user:", {
+      ...userData,
+      password: userData.password ? "********" : undefined,
+    })
 
     const { email, password, name, role_id } = userData
 
@@ -86,12 +89,11 @@ export async function POST(request: Request) {
     const hashedPassword = hashPassword(password)
 
     // Check if we have the admin client available
-    const adminClient = getAdminClient()
-    if (adminClient) {
+    if (supabaseAdmin) {
       console.log("[API] POST /api/users: Using admin client to create user")
 
       // Create user with admin client
-      const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
         email_confirm: true, // Auto-verify the email
@@ -117,7 +119,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Failed to create user in auth system" }, { status: 500 })
       }
 
-      console.log("[API] POST /api/users: User created in auth system")
+      console.log("[API] POST /api/users: User created in auth system:", authData.user.id)
 
       // Now insert the user into our users table
       const { data, error } = await supabase
@@ -148,7 +150,7 @@ export async function POST(request: Request) {
 
         // Try to clean up the auth user if the database insert fails
         try {
-          await adminClient.auth.admin.deleteUser(authData.user.id)
+          await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
           console.log("[API] POST /api/users: Cleaned up auth user after database error")
         } catch (cleanupError) {
           console.error("[API] POST /api/users: Failed to clean up auth user after database error:", cleanupError)
@@ -174,7 +176,7 @@ export async function POST(request: Request) {
         role: data.role ? data.role[0]?.name : null,
       }
 
-      console.log("[API] POST /api/users: User created successfully")
+      console.log("[API] POST /api/users: User created successfully:", transformedData)
       return NextResponse.json(transformedData)
     } else {
       // Fallback to regular signup if admin client is not available
@@ -208,7 +210,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Failed to create user in auth system" }, { status: 500 })
       }
 
-      console.log("[API] POST /api/users: User created in auth system")
+      console.log("[API] POST /api/users: User created in auth system:", authData.user.id)
 
       // Now insert the user into our users table
       const { data, error } = await supabase

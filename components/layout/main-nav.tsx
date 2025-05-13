@@ -52,7 +52,7 @@ export function MainNav() {
           href={item.href}
           className={cn(
             "text-lg font-medium transition-colors",
-            pathname?.startsWith(item.href) ? "font-bold text-green-700" : "font-bold text-green-700 hover:text-green-600",
+            pathname?.startsWith(item.href) ? "text-green-600 font-semibold" : "text-green-500/80 hover:text-green-600",
             item.disabled && "cursor-not-allowed opacity-80",
           )}
         >

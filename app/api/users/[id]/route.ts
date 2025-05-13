@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server"
-import { supabase, getAdminClient } from "@/lib/supabase"
+import { supabase, supabaseAdmin } from "@/lib/supabase"
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   const id = params.id
-  console.log(`[API] DELETE /api/users: Deleting user`)
+  console.log(`[API] DELETE /api/users/${id}: Deleting user`)
 
   try {
     // First, try to delete the user from auth
@@ -11,24 +11,26 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     let authError = null
 
     // Try with admin client first if available
-    const adminClient = getAdminClient()
-    if (adminClient) {
-      console.log(`[API] DELETE /api/users: Using admin client to delete auth user`)
+    if (supabaseAdmin) {
+      console.log(`[API] DELETE /api/users/${id}: Using admin client to delete auth user`)
       try {
-        const { error } = await adminClient.auth.admin.deleteUser(id)
+        const { error } = await supabaseAdmin.auth.admin.deleteUser(id)
         if (error) {
-          console.error(`[API] DELETE /api/users: Admin auth deletion error occurred`)
+          console.error(`[API] DELETE /api/users/${id}: Admin auth deletion error:`, {
+            message: error.message,
+            details: error.details,
+          })
           authError = error
         } else {
-          console.log(`[API] DELETE /api/users: Auth user deleted successfully with admin client`)
+          console.log(`[API] DELETE /api/users/${id}: Auth user deleted successfully with admin client`)
           authDeleted = true
         }
       } catch (error) {
-        console.error(`[API] DELETE /api/users: Admin auth deletion exception:`, error)
+        console.error(`[API] DELETE /api/users/${id}: Admin auth deletion exception:`, error)
         authError = error
       }
     } else {
-      console.log(`[API] DELETE /api/users: Admin client not available, skipping auth deletion`)
+      console.log(`[API] DELETE /api/users/${id}: Admin client not available, skipping auth deletion`)
       authError = new Error("Admin client not available")
     }
 
@@ -36,7 +38,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     const { error: dbError } = await supabase.from("users").delete().eq("id", id)
 
     if (dbError) {
-      console.error(`[API] DELETE /api/users: Database deletion error:`, {
+      console.error(`[API] DELETE /api/users/${id}: Database deletion error:`, {
         message: dbError.message,
         details: dbError.details,
       })
@@ -48,7 +50,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
     // Return success with a warning if auth deletion failed
     if (!authDeleted && authError) {
-      console.log(`[API] DELETE /api/users: User deleted from database but not from auth`)
+      console.log(`[API] DELETE /api/users/${id}: User deleted from database but not from auth`)
       return NextResponse.json({
         success: true,
         warning: "User deleted from database but not from auth system. The auth record may need manual cleanup.",
@@ -56,10 +58,10 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       })
     }
 
-    console.log(`[API] DELETE /api/users: User deleted successfully from both auth and database`)
+    console.log(`[API] DELETE /api/users/${id}: User deleted successfully from both auth and database`)
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error(`[API] DELETE /api/users: Unhandled exception:`, error)
+    console.error(`[API] DELETE /api/users/${id}: Unhandled exception:`, error)
     return NextResponse.json({ error: "Failed to delete user", details: error.message }, { status: 500 })
   }
 }

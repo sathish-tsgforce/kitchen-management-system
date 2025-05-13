@@ -9,7 +9,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Username and password are required" }, { status: 400 })
     }
 
-    console.log(`[API] Login attempt initiated`)
+    console.log(`[API] Login attempt for username: ${username}`)
 
     // Look up the user by username (using the name field)
     const { data: userData, error: userError } = await supabase
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     }
 
     const email = userData.email
-    console.log(`[API] User email resolved`)
+    console.log(`[API] Found email for username: ${email}`)
 
     // Sign in with email and password
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid username or password" }, { status: 401 })
     }
 
-    console.log(`[API] User authenticated successfully`)
+    console.log(`[API] User authenticated successfully: ${data.user.id}`)
 
     // Get user data with role
     const { data: userWithRole, error: roleError } = await supabase
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User not found in database" }, { status: 404 })
     }
 
-    console.log("[API] User data with role retrieved")
+    console.log("[API] User data with role:", JSON.stringify(userWithRole, null, 2))
 
     // Get role name - handle both array and object formats
     let roleName: string

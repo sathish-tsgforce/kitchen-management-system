@@ -1,48 +1,50 @@
-import { createClient } from "@supabase/supabase-js"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "./database.types"
 
-// Get environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+// Use environment variables for the Supabase URL and anon key
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-// Validate environment variables
-if (!supabaseUrl) {
-  throw new Error("Missing environment variable: NEXT_PUBLIC_SUPABASE_URL")
+// Enhanced createClient function with debugging
+export function createClient() {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("[Supabase] Missing environment variables:", {
+      hasUrl: !!supabaseUrl,
+      hasKey: !!supabaseAnonKey,
+    })
+    throw new Error("Missing Supabase environment variables")
+  }
+
+  console.log("[Supabase] Creating client with URL:", supabaseUrl.substring(0, 30) + "...")
+
+  try {
+    const client = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false,
+      },
+    })
+
+    console.log("[Supabase] Client created successfully")
+    return client
+  } catch (error) {
+    console.error("[Supabase] Error creating client:", error)
+    throw error
+  }
 }
 
-if (!supabaseAnonKey) {
-  throw new Error("Missing environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY")
-}
-
-// Re-export createClient for use in other files
-export { createClient } from "@supabase/supabase-js"
-
-// Create a lightweight Supabase client for client-side use
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+// Create a single instance of the Supabase client for direct import
+export const supabase = createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: false,
+    persistSession: false, // Disable session persistence to avoid multiple auth instances
   },
 })
 
-// Function to get admin client (server-side only)
-export function getAdminClient() {
-  // Ensure this is only used on the server
-  if (typeof window !== "undefined") {
-    throw new Error("getAdminClient can only be used on the server")
-  }
-
-  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-  if (!supabaseServiceRoleKey) {
-    throw new Error("Missing environment variable: SUPABASE_SERVICE_ROLE_KEY")
-  }
-
-  return createClient<Database>(supabaseUrl, supabaseServiceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  })
-}
+// Create an admin client with service role key for admin operations
+export const supabaseAdmin = supabaseServiceKey
+  ? createSupabaseClient<Database>(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        persistSession: false,
+      },
+    })
+  : null
