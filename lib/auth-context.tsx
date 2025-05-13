@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react"
 import { supabase } from "@/lib/supabase"
 import { useRouter, usePathname } from "next/navigation"
 import { toast } from "@/components/ui/use-toast"
@@ -16,15 +16,15 @@ interface RolePermissions {
 // Define permissions for each role
 const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
   ADMIN: {
-    allowedRoutes: ["/", "/recipes", "/inventory", "/orders", "/menu", "/users"],
+    allowedRoutes: ["/", "/recipes", "/inventory", "/orders", "/menu", "/users", "/recipe"],
     allowedNavItems: ["recipes", "inventory", "orders", "menu", "users"],
   },
   CHEF: {
-    allowedRoutes: ["/", "/recipes", "/inventory"],
+    allowedRoutes: ["/", "/recipes", "/inventory", "/recipe"],
     allowedNavItems: ["recipes", "inventory"],
   },
   STAFF: {
-    allowedRoutes: ["/", "/recipes", "/orders"],
+    allowedRoutes: ["/", "/recipes", "/orders", "/recipe"],
     allowedNavItems: ["recipes", "orders"],
   },
 }
@@ -66,18 +66,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter()
   const pathname = usePathname()
 
-  // Check if user has permission to access a route
-  const hasPermission = (route: string): boolean => {
-    if (!user) return false
-    const permissions = ROLE_PERMISSIONS[user.role]
-    return permissions.allowedRoutes.some((allowedRoute) => route.startsWith(allowedRoute))
-  }
+  // Check if user has permission to access a route - memoized for performance
+  const hasPermission = useCallback(
+    (route: string): boolean => {
+      if (!user) return false
+      const permissions = ROLE_PERMISSIONS[user.role]
+      return permissions.allowedRoutes.some((allowedRoute) => route.startsWith(allowedRoute))
+    },
+    [user],
+  )
 
-  // Fetch user data from database
-  const fetchUserData = async (userId: string) => {
+  // Optimized user data fetching
+  const fetchUserData = useCallback(async (userId: string) => {
     try {
-      console.log(`[Auth] Fetching user data`)
-
+      // Use a single query to get user data with role
       const { data, error } = await supabase
         .from("users")
         .select(`
@@ -90,25 +92,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         .eq("id", userId)
         .single()
 
-      if (error) {
-        console.error("[Auth] Error fetching user data:", error)
+      if (error || !data) {
         return null
       }
 
-      if (!data) {
-        console.error("[Auth] No user data found")
-        return null
-      }
-
-      console.log("[Auth] User data fetched successfully")
-
-      // Check if roles data exists and has the expected structure
-      if (!data.roles) {
-        console.error("[Auth] No role data found for user")
-        return null
-      }
-
-      // Get role name - handle both array and object formats that Supabase might return
+      // Get role name - handle both array and object formats
       let roleName: string | undefined
 
       if (Array.isArray(data.roles)) {
@@ -117,199 +105,136 @@ export function AuthProvider({ children }: AuthProviderProps) {
         roleName = data.roles.name
       }
 
-      console.log("[Auth] Role name:", roleName)
-
+      // Fallback role based on role_id if needed
       if (!roleName) {
-        console.error("[Auth] Role name is undefined")
-
-        // Fallback to a default role based on role_id
-        if (data.role_id === 1) {
-          roleName = "ADMIN"
-        } else if (data.role_id === 2) {
-          roleName = "CHEF"
-        } else {
-          roleName = "STAFF"
-        }
-
-        console.log("[Auth] Using fallback role:", roleName)
+        roleName = data.role_id === 1 ? "ADMIN" : data.role_id === 2 ? "CHEF" : "STAFF"
       }
 
       // Convert role name to uppercase and validate
       const upperRoleName = roleName.toUpperCase() as UserRole
-
-      if (!ROLE_PERMISSIONS[upperRoleName]) {
-        console.error(`[Auth] Invalid role: ${upperRoleName}`)
-
-        // Fallback to STAFF role if the role is invalid
-        console.log("[Auth] Falling back to STAFF role")
-        return {
-          id: data.id,
-          email: data.email,
-          username: data.email.split("@")[0],
-          name: data.name,
-          role: "STAFF" as UserRole,
-          roleId: data.role_id,
-        }
-      }
+      const validRole = ROLE_PERMISSIONS[upperRoleName] ? upperRoleName : "STAFF"
 
       return {
         id: data.id,
         email: data.email,
         username: data.email.split("@")[0],
         name: data.name,
-        role: upperRoleName,
+        role: validRole,
         roleId: data.role_id,
       }
     } catch (error) {
       console.error("[Auth] Error in fetchUserData:", error)
       return null
     }
-  }
+  }, [])
 
-  // Initialize auth state
+  // Initialize auth state - optimized for performance
   useEffect(() => {
+    let isMounted = true
+
     const initAuth = async () => {
-      setIsLoading(true)
+      if (!isMounted) return
 
       try {
-        // Check for existing session
-        const { data: sessionData } = await supabase.auth.getSession()
+        // Check for existing session - fast path
+        const { data } = await supabase.auth.getSession()
 
-        if (sessionData?.session) {
-          const { user: authUser } = sessionData.session
-
-          // Get user metadata
-          const { data: userData } = await supabase.auth.getUser()
-          const username = userData?.user?.user_metadata?.username || authUser.email?.split("@")[0] || ""
-
-          // Fetch complete user data from database
-          const userProfile = await fetchUserData(authUser.id)
-
-          if (userProfile) {
-            const fullUser = {
-              ...userProfile,
-              username,
-            }
-
-            setUser(fullUser)
-            setAllowedNavItems(ROLE_PERMISSIONS[fullUser.role].allowedNavItems)
-
-            // Redirect if on a route they don't have permission for
-            if (
-              pathname &&
-              !ROLE_PERMISSIONS[fullUser.role].allowedRoutes.some((route) => pathname.startsWith(route))
-            ) {
-              router.push("/")
-            }
-          } else {
-            // User exists in auth but not in database
-            console.error("[Auth] User exists in auth but not in database")
-            await supabase.auth.signOut()
-            setUser(null)
+        if (!data.session) {
+          setUser(null)
+          setIsLoading(false)
+          if (pathname !== "/login") {
             router.push("/login")
           }
-        } else {
-          // No session
+          return
+        }
+
+        // We have a session, get user data
+        const userProfile = await fetchUserData(data.session.user.id)
+
+        if (!userProfile || !isMounted) {
+          if (isMounted) {
+            setUser(null)
+            setIsLoading(false)
+            if (pathname !== "/login") {
+              router.push("/login")
+            }
+          }
+          return
+        }
+
+        // Set user and allowed nav items
+        setUser(userProfile)
+        setAllowedNavItems(ROLE_PERMISSIONS[userProfile.role].allowedNavItems)
+        setIsLoading(false)
+      } catch (error) {
+        console.error("[Auth] Auth initialization error:", error)
+        if (isMounted) {
           setUser(null)
+          setIsLoading(false)
           if (pathname !== "/login") {
             router.push("/login")
           }
         }
-      } catch (error) {
-        console.error("[Auth] Auth initialization error:", error)
-        setUser(null)
-      } finally {
-        setIsLoading(false)
       }
     }
 
     initAuth()
 
-    // Set up auth state change listener
+    // Set up auth state change listener - optimized for multi-device support
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("[Auth] Auth state changed:", event)
+      if (!isMounted) return
 
       if (event === "SIGNED_IN" && session) {
-        const { user: authUser } = session
+        const userProfile = await fetchUserData(session.user.id)
 
-        // Get user metadata
-        const { data: userData } = await supabase.auth.getUser()
-        const username = userData?.user?.user_metadata?.username || authUser.email?.split("@")[0] || ""
+        if (userProfile && isMounted) {
+          setUser(userProfile)
+          setAllowedNavItems(ROLE_PERMISSIONS[userProfile.role].allowedNavItems)
 
-        // Fetch complete user data from database
-        const userProfile = await fetchUserData(authUser.id)
-
-        if (userProfile) {
-          const fullUser = {
-            ...userProfile,
-            username,
-          }
-
-          setUser(fullUser)
-          setAllowedNavItems(ROLE_PERMISSIONS[fullUser.role].allowedNavItems)
-
-          // Navigate to home page if on login page
           if (pathname === "/login") {
             router.push("/")
           }
-        } else {
-          // User exists in auth but not in database
-          console.error("[Auth] User exists in auth but not in database")
-          toast({
-            title: "Authentication Error",
-            description: "Your user account is not properly set up. Please contact an administrator.",
-            variant: "destructive",
-          })
-          await supabase.auth.signOut()
-          setUser(null)
-          router.push("/login")
         }
-      } else if (event === "SIGNED_OUT") {
+      } else if (event === "SIGNED_OUT" && isMounted) {
         setUser(null)
         setAllowedNavItems([])
-        router.push("/login")
+        if (pathname !== "/login") {
+          router.push("/login")
+        }
       }
     })
 
     return () => {
+      isMounted = false
       authListener.subscription.unsubscribe()
     }
-  }, [router, pathname])
+  }, [router, pathname, fetchUserData])
 
-  // Login function
+  // Login function - optimized for performance
   const login = async (username: string, password: string) => {
     setIsLoading(true)
 
     try {
-      console.log(`[Auth] Login attempt initiated`)
-
       // First, look up the email associated with the username
       const { data: userData, error: userError } = await supabase
         .from("users")
         .select("email")
-        .ilike("name", username) // Using name field as username
+        .ilike("name", username)
         .single()
 
       if (userError || !userData) {
-        console.error("[Auth] User lookup error:", userError)
         throw new Error("Invalid username or password")
       }
 
-      const email = userData.email
-      console.log(`[Auth] User email resolved`)
-
-      // Now sign in with the email and password
+      // Sign in with the email and password
       const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
+        email: userData.email,
         password,
       })
 
       if (signInError) {
-        console.error("[Auth] Sign in error:", signInError)
         throw new Error(signInError.message)
       }
-
-      console.log("[Auth] Sign in successful")
 
       // Auth state listener will handle setting the user and navigation
     } catch (error: any) {
@@ -326,14 +251,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
-  // Logout function
+  // Logout function - optimized for performance
   const logout = async () => {
-    setIsLoading(true)
-
     try {
       await supabase.auth.signOut()
-      setUser(null)
-      router.push("/login")
+      // Auth state listener will handle clearing the user and navigation
     } catch (error) {
       console.error("[Auth] Logout error:", error)
       toast({
@@ -341,8 +263,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         description: "An error occurred during logout",
         variant: "destructive",
       })
-    } finally {
-      setIsLoading(false)
     }
   }
 

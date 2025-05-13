@@ -1,41 +1,45 @@
-import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { createClient } from "@supabase/supabase-js"
 import type { Database } from "./database.types"
 
-// Use environment variables for the Supabase URL and anon key
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// Get environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-// Create a single instance of the Supabase client for direct import
-export const supabase = createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey, {
+// Validate environment variables
+if (!supabaseUrl) {
+  throw new Error("Missing environment variable: NEXT_PUBLIC_SUPABASE_URL")
+}
+
+if (!supabaseAnonKey) {
+  throw new Error("Missing environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY")
+}
+
+// Create a lightweight Supabase client for client-side use
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: false, // Disable session persistence to avoid multiple auth instances
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
   },
 })
 
-// Server-side only code - this will not be included in client bundles
-let supabaseAdmin: ReturnType<typeof createSupabaseClient<Database>> | null = null
-
-// This function should only be called from server components or API routes
+// Function to get admin client (server-side only)
 export function getAdminClient() {
+  // Ensure this is only used on the server
   if (typeof window !== "undefined") {
-    console.error("getAdminClient() should not be called on the client side")
-    return null
+    throw new Error("getAdminClient can only be used on the server")
   }
 
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  if (!supabaseServiceKey) {
-    console.error("SUPABASE_SERVICE_ROLE_KEY is not defined")
-    return null
+  if (!supabaseServiceRoleKey) {
+    throw new Error("Missing environment variable: SUPABASE_SERVICE_ROLE_KEY")
   }
 
-  if (!supabaseAdmin) {
-    supabaseAdmin = createSupabaseClient<Database>(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        persistSession: false,
-      },
-    })
-  }
-
-  return supabaseAdmin
+  return createClient<Database>(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
 }

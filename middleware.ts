@@ -4,23 +4,36 @@ import type { NextRequest } from "next/server"
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Skip middleware for login page and API routes
-  if (pathname === "/login" || pathname.startsWith("/api/")) {
+  // Skip middleware for these paths
+  if (
+    pathname === "/login" ||
+    pathname.startsWith("/api/") ||
+    pathname.includes("/_next/") ||
+    pathname.includes("/favicon.ico")
+  ) {
     return NextResponse.next()
   }
 
-  // Check if user is authenticated
-  const authSession = request.cookies.get("sb-auth-token")
+  // Check for auth cookie - just a basic check to avoid unnecessary redirects
+  const hasAuthCookie = request.cookies.has("sb-access-token") || request.cookies.has("sb-refresh-token")
 
-  if (!authSession) {
-    // Redirect to login if not authenticated
+  if (!hasAuthCookie) {
     return NextResponse.redirect(new URL("/login", request.url))
   }
 
-  // Continue to the requested page
+  // Allow the request to proceed
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    "/((?!_next/static|_next/image|favicon.ico|public/).*)",
+  ],
 }
