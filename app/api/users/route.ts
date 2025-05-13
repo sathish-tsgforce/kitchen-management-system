@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { supabase, supabaseAdmin } from "@/lib/supabase"
+import { supabase, getAdminClient } from "@/lib/supabase"
 import { createHash } from "crypto"
 
 // Helper function to hash passwords
@@ -86,11 +86,12 @@ export async function POST(request: Request) {
     const hashedPassword = hashPassword(password)
 
     // Check if we have the admin client available
-    if (supabaseAdmin) {
+    const adminClient = getAdminClient()
+    if (adminClient) {
       console.log("[API] POST /api/users: Using admin client to create user")
 
       // Create user with admin client
-      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
         email,
         password,
         email_confirm: true, // Auto-verify the email
@@ -147,7 +148,7 @@ export async function POST(request: Request) {
 
         // Try to clean up the auth user if the database insert fails
         try {
-          await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
+          await adminClient.auth.admin.deleteUser(authData.user.id)
           console.log("[API] POST /api/users: Cleaned up auth user after database error")
         } catch (cleanupError) {
           console.error("[API] POST /api/users: Failed to clean up auth user after database error:", cleanupError)

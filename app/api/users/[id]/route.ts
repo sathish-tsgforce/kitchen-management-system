@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { supabase, supabaseAdmin } from "@/lib/supabase"
+import { supabase, getAdminClient } from "@/lib/supabase"
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   const id = params.id
@@ -11,10 +11,11 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     let authError = null
 
     // Try with admin client first if available
-    if (supabaseAdmin) {
+    const adminClient = getAdminClient()
+    if (adminClient) {
       console.log(`[API] DELETE /api/users: Using admin client to delete auth user`)
       try {
-        const { error } = await supabaseAdmin.auth.admin.deleteUser(id)
+        const { error } = await adminClient.auth.admin.deleteUser(id)
         if (error) {
           console.error(`[API] DELETE /api/users: Admin auth deletion error occurred`)
           authError = error
