@@ -1,7 +1,7 @@
 -- Create roles table if it doesn't exist
 CREATE TABLE IF NOT EXISTS roles (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL UNIQUE
+  name TEXT UNIQUE NOT NULL
 );
 
 -- Check if roles exist, if not insert default roles
@@ -23,7 +23,7 @@ BEGIN
   -- Create roles table if it doesn't exist
   CREATE TABLE IF NOT EXISTS roles (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL UNIQUE
+    name TEXT UNIQUE NOT NULL
   );
   
   -- Insert default roles if they don't exist
@@ -36,15 +36,3 @@ BEGIN
   END IF;
 END;
 $$ LANGUAGE plpgsql;
-
--- Add role_id to users table if it doesn't exist
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1
-    FROM information_schema.columns
-    WHERE table_name = 'users' AND column_name = 'role_id'
-  ) THEN
-    ALTER TABLE users ADD COLUMN role_id INTEGER REFERENCES roles(id);
-  END IF;
-END $$;

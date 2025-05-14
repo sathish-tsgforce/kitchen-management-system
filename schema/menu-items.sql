@@ -1,11 +1,11 @@
 -- Create menu_items table if it doesn't exist
 CREATE TABLE IF NOT EXISTS menu_items (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
+  name TEXT NOT NULL,
   description TEXT,
-  image_url TEXT,
-  minimum_order_quantity INTEGER NOT NULL DEFAULT 1,
-  price NUMERIC(10, 2) NOT NULL CHECK (price >= 0)
+  image_url TEXT NOT NULL,
+  minimum_order_quantity INTEGER NOT NULL CHECK (minimum_order_quantity > 0),
+  price FLOAT NOT NULL CHECK (price > 0)
 );
 
 -- Add indexes for better performance
