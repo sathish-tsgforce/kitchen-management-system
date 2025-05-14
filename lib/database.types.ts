@@ -72,6 +72,7 @@ export interface Database {
           price: number | null
           category: string | null
           location: string | null
+          threshold_quantity: number | null
         }
         Insert: {
           id?: number
@@ -81,6 +82,7 @@ export interface Database {
           price?: number | null
           category?: string | null
           location?: string | null
+          threshold_quantity?: number | null
         }
         Update: {
           id?: number
@@ -90,6 +92,7 @@ export interface Database {
           price?: number | null
           category?: string | null
           location?: string | null
+          threshold_quantity?: number | null
         }
       }
       recipes: {

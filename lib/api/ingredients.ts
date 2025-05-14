@@ -21,7 +21,36 @@ export async function addIngredient(ingredient: Omit<Ingredient, "id">): Promise
 
     console.log("Adding ingredient without ID:", ingredientWithoutId)
 
-    // Use upsert with onConflict to handle potential duplicates
+    // First check if an ingredient with the same name already exists
+    const { data: existingData, error: checkError } = await supabase
+      .from("ingredients")
+      .select("id")
+      .eq("name", ingredientWithoutId.name)
+      .limit(1)
+
+    if (checkError) {
+      console.error("Error checking for existing ingredient:", checkError)
+    }
+
+    // If ingredient with same name exists, update it instead
+    if (existingData && existingData.length > 0) {
+      const existingId = existingData[0].id
+      console.log(
+        `Ingredient with name "${ingredientWithoutId.name}" already exists with ID ${existingId}, updating instead`,
+      )
+
+      const { data: updatedData, error: updateError } = await supabase
+        .from("ingredients")
+        .update(ingredientWithoutId)
+        .eq("id", existingId)
+        .select()
+
+      if (updateError) throw updateError
+
+      return updatedData && updatedData.length > 0 ? (updatedData[0] as Ingredient) : null
+    }
+
+    // Use insert with onConflict to handle potential duplicates
     const { data, error } = await supabase.from("ingredients").insert([ingredientWithoutId]).select()
 
     if (error) {

@@ -26,6 +26,7 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
     price: ingredient?.price || 0,
     category: ingredient?.category || "",
     location: ingredient?.location || "",
+    threshold_quantity: ingredient?.threshold_quantity || 10,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -63,15 +64,32 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
           price: formData.price || 0,
           category: formData.category || "",
           location: formData.location || "",
+          threshold_quantity: formData.threshold_quantity || 10,
         }
 
         console.log("Submitting new ingredient:", newIngredientData)
 
-        await addIngredient(newIngredientData)
-        toast({
-          title: "Ingredient added",
-          description: `${formData.name} has been added to inventory.`,
-        })
+        try {
+          await addIngredient(newIngredientData)
+          toast({
+            title: "Ingredient added",
+            description: `${formData.name} has been added to inventory.`,
+          })
+        } catch (err: any) {
+          // Check if it's a duplicate key error
+          if (err.message && err.message.includes("duplicate key")) {
+            setError(
+              `An ingredient with this name already exists. Please use a different name or edit the existing one.`,
+            )
+            toast({
+              title: "Duplicate ingredient",
+              description: `An ingredient named "${formData.name}" already exists.`,
+              variant: "destructive",
+            })
+          } else {
+            throw err // Re-throw if it's not a duplicate key error
+          }
+        }
       }
     } catch (err: any) {
       console.error("Error saving ingredient:", err)
@@ -87,26 +105,28 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 pt-4">
-      {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4">{error}</div>}
+    <div className="flex flex-col h-full">
+      <form onSubmit={handleSubmit} className="flex flex-col space-y-3 flex-grow">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md text-sm">{error}</div>
+        )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="name" className="text-lg">
-            Name
-          </Label>
-          <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) => handleChange("name", e.target.value)}
-            className="text-lg p-3 h-auto"
-            required
-          />
-        </div>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+          <div className="col-span-2">
+            <Label htmlFor="name" className="text-sm font-medium">
+              Name
+            </Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => handleChange("name", e.target.value)}
+              className="h-8"
+              required
+            />
+          </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="quantity" className="text-lg">
+          <div>
+            <Label htmlFor="quantity" className="text-sm font-medium">
               Quantity
             </Label>
             <Input
@@ -116,18 +136,34 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
               step="0.01"
               value={formData.quantity}
               onChange={(e) => handleChange("quantity", Number.parseFloat(e.target.value) || 0)}
-              className="text-lg p-3 h-auto"
+              className="h-8"
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="unit" className="text-lg">
+          <div>
+            <Label htmlFor="threshold_quantity" className="text-sm font-medium">
+              Threshold
+            </Label>
+            <Input
+              id="threshold_quantity"
+              type="number"
+              min="0"
+              step="0.01"
+              value={formData.threshold_quantity}
+              onChange={(e) => handleChange("threshold_quantity", Number.parseFloat(e.target.value) || 0)}
+              className="h-8"
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="unit" className="text-sm font-medium">
               Unit
             </Label>
             <Select value={formData.unit} onValueChange={(value) => handleChange("unit", value)}>
-              <SelectTrigger id="unit" className="text-lg p-3 h-auto">
-                <SelectValue placeholder="Select unit" />
+              <SelectTrigger id="unit" className="h-8">
+                <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
                 {units.map((unit) => (
@@ -140,107 +176,86 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
                 </SelectItem>
               </SelectContent>
             </Select>
-            {formData.unit === "custom" && (
+          </div>
+
+          <div>
+            <Label htmlFor="price" className="text-sm font-medium">
+              Price
+            </Label>
+            <div className="relative">
+              <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">$</span>
               <Input
-                className="mt-2 text-lg p-3 h-auto"
-                placeholder="Enter custom unit"
-                onChange={(e) => handleChange("unit", e.target.value)}
+                id="price"
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.price}
+                onChange={(e) => handleChange("price", Number.parseFloat(e.target.value) || 0)}
+                className="pl-5 h-8"
               />
-            )}
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="category" className="text-sm font-medium">
+              Category
+            </Label>
+            <Select value={formData.category} onValueChange={(value) => handleChange("category", value)}>
+              <SelectTrigger id="category" className="h-8">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category} className="cursor-pointer">
+                    {category}
+                  </SelectItem>
+                ))}
+                <SelectItem value="custom" className="cursor-pointer">
+                  Custom...
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="location" className="text-sm font-medium">
+              Location
+            </Label>
+            <Select value={formData.location} onValueChange={(value) => handleChange("location", value)}>
+              <SelectTrigger id="location" className="h-8">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                {locations.map((location) => (
+                  <SelectItem key={location} value={location} className="cursor-pointer">
+                    {location}
+                  </SelectItem>
+                ))}
+                <SelectItem value="custom" className="cursor-pointer">
+                  Custom...
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="price" className="text-lg">
-            Price
-          </Label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-            <Input
-              id="price"
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.price}
-              onChange={(e) => handleChange("price", Number.parseFloat(e.target.value) || 0)}
-              className="text-lg p-3 h-auto pl-7"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="category" className="text-lg">
-            Category
-          </Label>
-          <Select value={formData.category} onValueChange={(value) => handleChange("category", value)}>
-            <SelectTrigger id="category" className="text-lg p-3 h-auto">
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((category) => (
-                <SelectItem key={category} value={category} className="cursor-pointer">
-                  {category}
-                </SelectItem>
-              ))}
-              <SelectItem value="custom" className="cursor-pointer">
-                Custom...
-              </SelectItem>
-            </SelectContent>
-          </Select>
-          {formData.category === "custom" && (
-            <Input
-              className="mt-2 text-lg p-3 h-auto"
-              placeholder="Enter custom category"
-              onChange={(e) => handleChange("category", e.target.value)}
-            />
-          )}
-        </div>
-
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="location" className="text-lg">
-            Storage Location
-          </Label>
-          <Select value={formData.location} onValueChange={(value) => handleChange("location", value)}>
-            <SelectTrigger id="location" className="text-lg p-3 h-auto">
-              <SelectValue placeholder="Select location" />
-            </SelectTrigger>
-            <SelectContent>
-              {locations.map((location) => (
-                <SelectItem key={location} value={location} className="cursor-pointer">
-                  {location}
-                </SelectItem>
-              ))}
-              <SelectItem value="custom" className="cursor-pointer">
-                Custom...
-              </SelectItem>
-            </SelectContent>
-          </Select>
-          {formData.location === "custom" && (
-            <Input
-              className="mt-2 text-lg p-3 h-auto"
-              placeholder="Enter custom location"
-              onChange={(e) => handleChange("location", e.target.value)}
-            />
-          )}
-        </div>
-      </div>
-
-      <div className="flex justify-end gap-4 pt-4">
-        <DialogClose asChild>
-          <Button type="button" variant="outline" className="text-lg p-3 h-auto">
-            Cancel
+        <div className="flex justify-end gap-3 mt-3 pt-2 border-t">
+          <DialogClose asChild>
+            <Button type="button" variant="outline" size="sm">
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button type="submit" className="bg-green-700 hover:bg-green-800" size="sm" disabled={isSubmitting}>
+            {isSubmitting
+              ? ingredient
+                ? "Updating..."
+                : "Saving..."
+              : ingredient
+                ? "Update Ingredient"
+                : "Save Ingredient"}
           </Button>
-        </DialogClose>
-        <Button type="submit" className="bg-green-700 hover:bg-green-800 text-lg p-3 h-auto" disabled={isSubmitting}>
-          {isSubmitting
-            ? ingredient
-              ? "Updating..."
-              : "Saving..."
-            : ingredient
-              ? "Update Ingredient"
-              : "Save Ingredient"}
-        </Button>
-      </div>
-    </form>
+        </div>
+      </form>
+    </div>
   )
 }

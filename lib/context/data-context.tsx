@@ -632,13 +632,49 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       // Ensure we're not sending any id field
       const { id, ...ingredientWithoutId } = ingredient as any
 
+      console.log("Adding ingredient without ID:", ingredientWithoutId)
+
+      // First check if an ingredient with the same name already exists
+      const { data: existingData, error: checkError } = await supabase
+        .from("ingredients")
+        .select("id")
+        .eq("name", ingredientWithoutId.name)
+        .limit(1)
+
+      if (checkError) {
+        console.error("Error checking for existing ingredient:", checkError)
+      }
+
+      // If ingredient with same name exists, update it instead
+      if (existingData && existingData.length > 0) {
+        const existingId = existingData[0].id
+        console.log(
+          `Ingredient with name "${ingredientWithoutId.name}" already exists with ID ${existingId}, updating instead`,
+        )
+
+        const { error: updateError } = await supabase
+          .from("ingredients")
+          .update(ingredientWithoutId)
+          .eq("id", existingId)
+
+        if (updateError) throw updateError
+
+        // Refresh ingredients to ensure consistency
+        await fetchIngredients()
+        return
+      }
+
+      // Otherwise, insert new ingredient
       const { data, error } = await supabase.from("ingredients").insert([ingredientWithoutId]).select()
 
       if (handleRateLimitError(error)) {
         throw new Error("Rate limit exceeded. Please try again later.")
       }
 
-      if (error) throw error
+      if (error) {
+        console.error("Error details:", error)
+        throw error
+      }
 
       // Update local state
       if (data && data.length > 0) {

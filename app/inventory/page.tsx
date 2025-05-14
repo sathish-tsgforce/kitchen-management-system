@@ -63,7 +63,12 @@ export default function InventoryPage() {
 
     const matchesCategory = filterCategory === "all" || ingredient.category === filterCategory
 
-    const matchesLowQuantity = !showLowQuantityOnly || (ingredient.quantity !== undefined && ingredient.quantity < 10)
+    const matchesLowQuantity =
+      !showLowQuantityOnly ||
+      (ingredient.quantity !== undefined &&
+        ingredient.threshold_quantity !== undefined &&
+        ingredient.quantity <= ingredient.threshold_quantity) ||
+      (ingredient.quantity !== undefined && ingredient.threshold_quantity === undefined && ingredient.quantity < 10)
 
     return matchesSearch && matchesCategory && matchesLowQuantity
   })
@@ -115,13 +120,14 @@ export default function InventoryPage() {
   const exportToCSV = () => {
     try {
       // Define the headers
-      const headers = ["Name", "Quantity", "Unit", "Price", "Category", "Location"]
+      const headers = ["Name", "Quantity", "Unit", "Threshold Quantity", "Price", "Category", "Location"]
 
       // Format the data
       const data = ingredients.map((ingredient) => [
         ingredient.name,
         ingredient.quantity,
         ingredient.unit,
+        ingredient.threshold_quantity || 10,
         ingredient.price ? `$${ingredient.price.toFixed(2)}` : "N/A",
         ingredient.category || "Uncategorized",
         ingredient.location || "Not specified",
@@ -229,9 +235,9 @@ export default function InventoryPage() {
                 Add New Ingredient
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle className="text-2xl">Add New Ingredient</DialogTitle>
+            <DialogContent className="max-w-[450px] p-4 border-2 border-gray-200 rounded-lg shadow-lg">
+              <DialogHeader className="pb-2 mb-1">
+                <DialogTitle className="text-lg font-semibold">Add New Ingredient</DialogTitle>
               </DialogHeader>
               <InventoryForm />
             </DialogContent>
@@ -259,6 +265,15 @@ export default function InventoryPage() {
                   aria-label="Sort by quantity"
                 >
                   Quantity {getSortDirectionIcon("quantity")}
+                </button>
+              </TableHead>
+              <TableHead>
+                <button
+                  className="flex items-center font-semibold text-left"
+                  onClick={() => requestSort("threshold_quantity")}
+                  aria-label="Sort by threshold quantity"
+                >
+                  Threshold Quantity {getSortDirectionIcon("threshold_quantity")}
                 </button>
               </TableHead>
               <TableHead>
@@ -294,7 +309,7 @@ export default function InventoryPage() {
           <TableBody>
             {filteredIngredients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   {showLowQuantityOnly ? "No ingredients with low quantity found." : "No ingredients found."}
                 </TableCell>
               </TableRow>
@@ -304,11 +319,14 @@ export default function InventoryPage() {
                   <TableCell className="font-medium">{ingredient.name}</TableCell>
                   <TableCell>
                     {ingredient.quantity} {ingredient.unit}
-                    {ingredient.quantity < 10 && (
+                    {ingredient.quantity <= (ingredient.threshold_quantity || 10) && (
                       <Badge variant="destructive" className="ml-2">
                         Low
                       </Badge>
                     )}
+                  </TableCell>
+                  <TableCell>
+                    {ingredient.threshold_quantity || 10} {ingredient.unit}
                   </TableCell>
                   <TableCell>${ingredient.price?.toFixed(2) || "N/A"}</TableCell>
                   <TableCell>{ingredient.category || "Uncategorized"}</TableCell>
@@ -321,9 +339,9 @@ export default function InventoryPage() {
                             <Edit className="h-4 w-4" />
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[600px]">
-                          <DialogHeader>
-                            <DialogTitle className="text-2xl">Edit Ingredient</DialogTitle>
+                        <DialogContent className="max-w-[450px] p-4 border-2 border-gray-200 rounded-lg shadow-lg">
+                          <DialogHeader className="pb-2 mb-1">
+                            <DialogTitle className="text-lg font-semibold">Edit Ingredient</DialogTitle>
                           </DialogHeader>
                           <InventoryForm ingredient={ingredient} />
                         </DialogContent>
