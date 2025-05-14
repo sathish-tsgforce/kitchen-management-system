@@ -1,30 +1,107 @@
-# Recipe Management Mockup
+# Fortitude Culina Kitchen Management System
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+## Introduction
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/mats-projects-4606ca98/v0-recipe-management-mockup)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/7kex2HZB8My)
+This guide helps new developers set up the Fortitude Culina Kitchen Management System project locally for development. It assumes you're new to Next.js but familiar with JavaScript/TypeScript and already have Supabase (database and storage buckets) set up.
 
-## Overview
+---
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+## Tech Stack
 
-## Deployment
+- **Frontend Framework**: [Next.js](https://nextjs.org/) (App Router)
+- **Backend**: Supabase (PostgreSQL + Auth + Storage)
+- **UI**: React + Tailwind CSS
+- **Database**: Supabase SQL
+- **Authentication**: Supabase Auth
+- **Media Storage**: Supabase Buckets
+- **Hosting**: Vercel
 
-Your project is live at:
+---
 
-**[https://vercel.com/mats-projects-4606ca98/v0-recipe-management-mockup](https://vercel.com/mats-projects-4606ca98/v0-recipe-management-mockup)**
+## Prerequisites
 
-## Build your app
+Before starting, make sure the following are installed:
 
-Continue building your app on:
+- Node.js v18.x or later
+- npm v9.x or later
+- Git
+- A code editor (VS Code recommended)
 
-**[https://v0.dev/chat/projects/7kex2HZB8My](https://v0.dev/chat/projects/7kex2HZB8My)**
+---
 
-## How It Works
+## 1. Clone the Repository
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+```bash
+git clone https://github.com/noelmathewisaac/kitchen-management-system.git
+cd kitchen-management-system
+```
+
+---
+
+## 2. Install Dependencies
+
+We recommend using `pnpm` for faster and more efficient package management.
+
+### Install pnpm (if not already installed)
+
+```bash
+npm install -g pnpm
+```
+
+### Install project dependencies
+
+```bash
+pnpm install
+```
+
+---
+
+## 3. Set Up Environment Variables
+
+Create a `.env.local` file in the project root and add the following:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+```
+
+> These should match the keys from your Supabase project.
+
+---
+
+## 4. Run the Development Server
+
+Start the local server:
+
+```bash
+pnpm dev
+```
+
+This will start the Next.js development environment. Open your browser and go to:
+
+```
+http://localhost:3000
+```
+
+
+## 5. Project Structure (Quick Overview)
+
+```
+fortitude-culina/
+├── app/                  # Next.js app router pages
+├── components/           # UI and feature components
+├── lib/                  # API, context, hooks, utils
+├── public/               # Static assets
+├── schema/               # SQL schema files
+├── scripts/              # CLI and utility scripts
+├── supabase/             # Supabase functions
+├── .env.local            # Local environment config
+├── package.json          # Project dependencies
+└── tsconfig.json         # TypeScript configuration
+```
+
+
+## Vercel Deployment
+
+Link - https://v0-recipe-management-mockup.vercel.app
