@@ -31,10 +31,10 @@ Before starting, make sure the following are installed:
 
 ## 1. Clone the Repository
 
-\`\`\`bash
+```bash
 git clone https://github.com/noelmathewisaac/kitchen-management-system.git
 cd kitchen-management-system
-\`\`\`
+```
 
 ---
 
@@ -44,15 +44,15 @@ We recommend using `pnpm` for faster and more efficient package management.
 
 ### Install pnpm (if not already installed)
 
-\`\`\`bash
+```bash
 npm install -g pnpm
-\`\`\`
+```
 
 ### Install project dependencies
 
-\`\`\`bash
+```bash
 pnpm install
-\`\`\`
+```
 
 ---
 
@@ -60,11 +60,11 @@ pnpm install
 
 Create a `.env.local` file in the project root and add the following:
 
-\`\`\`env
+```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-\`\`\`
+```
 
 > These should match the keys from your Supabase project.
 
@@ -74,20 +74,20 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
 Start the local server:
 
-\`\`\`bash
+```bash
 pnpm dev
-\`\`\`
+```
 
 This will start the Next.js development environment. Open your browser and go to:
 
-\`\`\`
+```
 http://localhost:3000
-\`\`\`
+```
 
 
 ## 5. Project Structure (Quick Overview)
 
-\`\`\`
+```
 fortitude-culina/
 ├── app/                  # Next.js app router pages
 ├── components/           # UI and feature components
@@ -99,7 +99,7 @@ fortitude-culina/
 ├── .env.local            # Local environment config
 ├── package.json          # Project dependencies
 └── tsconfig.json         # TypeScript configuration
-\`\`\`
+```
 
 
 ## Vercel Deployment
