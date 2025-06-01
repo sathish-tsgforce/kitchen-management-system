@@ -32,7 +32,7 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
   const [error, setError] = useState<string | null>(null)
 
   const categories = ["Vegetables", "Fruits", "Dairy", "Meat", "Seafood", "Grains", "Spices", "Oils", "Other"]
-  const locations = ["Main Kitchen", "Dry Storage", "Refrigerator", "Freezer", "Spice Rack", "Other"]
+  const locations = ["Mountbatten", "Serangoon", "Queenstown", "Changi", "Jurong", "Punggol"]
   const units = ["g", "kg", "ml", "l", "pcs", "bunch", "tbsp", "tsp", "cup"]
 
   const handleChange = (field: string, value: string | number) => {

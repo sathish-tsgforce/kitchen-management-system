@@ -11,9 +11,9 @@ export function MainNav() {
 
   const routes = [
     {
-      href: "/recipes",
-      label: "Recipes",
-      active: pathname === "/recipes" || pathname.startsWith("/recipes/"),
+      href: "/menu",
+      label: "Menu",
+      active: pathname === "/menu" || pathname.startsWith("/menu/"),
     },
     {
       href: "/inventory",
@@ -21,14 +21,14 @@ export function MainNav() {
       active: pathname === "/inventory",
     },
     {
+      href: "/recipes",
+      label: "Recipes",
+      active: pathname === "/recipes" || pathname.startsWith("/recipes/"),
+    },
+    {
       href: "/orders",
       label: "Orders",
       active: pathname === "/orders" || pathname.startsWith("/orders/"),
-    },
-    {
-      href: "/menu",
-      label: "Menu",
-      active: pathname === "/menu" || pathname.startsWith("/menu/"),
     },
     {
       href: "/users",
