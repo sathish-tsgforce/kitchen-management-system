@@ -3,16 +3,17 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
-import { Header } from "@/components/layout/header"
 import { AuthProvider } from "@/lib/auth-context"
 import { DataProvider } from "@/lib/context/data-context"
 import { QueryProvider } from "@/components/providers/query-provider"
 import { TextSizeProvider } from "@/lib/context/text-size-context"
+import { Header } from "@/components/layout/header"
+import { ClientHeader } from "@/components/layout/client-header"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Recipe Management System",
+  title: "Kitchen Management System",
   description: "A comprehensive system for managing recipes, inventory, and orders",
   generator: "v0.dev",
 }
@@ -29,7 +30,6 @@ export default function RootLayout({
           <AuthProvider>
             <DataProvider>
               <TextSizeProvider>
-                <Header />
                 {children}
                 <Toaster />
               </TextSizeProvider>

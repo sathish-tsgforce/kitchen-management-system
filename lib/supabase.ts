@@ -4,7 +4,7 @@ import type { Database } from "./database.types"
 // Use environment variables for the Supabase URL and anon key
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const supabaseServiceKey = process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
 
 // Enhanced createClient function with debugging
 export function createClient() {

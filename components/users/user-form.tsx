@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Loader2 } from "lucide-react"
-import type { User, UserRole } from "@/lib/types/user"
+import type { User, UserRole, UserLocation } from "@/lib/types/user"
 
 // Form schema
 const userFormSchema = z.object({
@@ -30,6 +30,7 @@ const userFormSchema = z.object({
     required_error: "Please select a role.",
     invalid_type_error: "Role must be a number",
   }),
+  location_id: z.coerce.number().nullable().optional(),
 })
 
 type UserFormValues = z.infer<typeof userFormSchema>
@@ -40,10 +41,11 @@ interface UserFormProps {
   onSubmit: (values: UserFormValues) => void
   user?: User
   roles: UserRole[]
+  locations: UserLocation[]
   isLoading?: boolean
 }
 
-export function UserForm({ open, onOpenChange, onSubmit, user, roles, isLoading = false }: UserFormProps) {
+export function UserForm({ open, onOpenChange, onSubmit, user, roles, locations, isLoading = false }: UserFormProps) {
   const [showPassword, setShowPassword] = useState(!user)
   const isEditing = !!user
 
@@ -53,6 +55,7 @@ export function UserForm({ open, onOpenChange, onSubmit, user, roles, isLoading 
     email: user?.email || "",
     password: "",
     role_id: user?.role_id || undefined,
+    location_id: user?.location_id || null,
   }
 
   const form = useForm<UserFormValues>({
@@ -169,6 +172,34 @@ export function UserForm({ open, onOpenChange, onSubmit, user, roles, isLoading 
                           </SelectItem>
                         ))
                       )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="location_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location (Optional)</FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(value === "none" ? null : Number(value))}
+                    value={field.value?.toString() || "none"}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a location" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {locations.map((location) => (
+                        <SelectItem key={location.id} value={location.id.toString()}>
+                          {location.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

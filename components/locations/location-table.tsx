@@ -14,34 +14,35 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Pencil, Trash2, RefreshCw, UserPlus } from "lucide-react"
-import { UserForm } from "@/components/users/user-form"
-import { useUsers } from "@/lib/hooks/use-users"
-import type { User } from "@/lib/types/user"
+import { Badge } from "@/components/ui/badge"
+import { Pencil, Trash2, RefreshCw, Plus } from "lucide-react"
+import { LocationForm } from "@/components/locations/location-form"
+import { useLocations } from "@/lib/hooks/use-locations"
+import type { Location } from "@/lib/api/locations"
 
-export function UserTable() {
-  const { users, roles, locations, isLoading, error, createUser, updateUser, deleteUser, refreshUsers, refreshLocations } = useUsers()
+export function LocationTable() {
+  const { locations, isLoading, error, createLocation, updateLocation, deleteLocation, refreshLocations } = useLocations()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleEdit = (user: User) => {
-    setSelectedUser(user)
+  const handleEdit = (location: Location) => {
+    setSelectedLocation(location)
     setIsEditDialogOpen(true)
   }
 
-  const handleDelete = (user: User) => {
-    setSelectedUser(user)
+  const handleDelete = (location: Location) => {
+    setSelectedLocation(location)
     setIsDeleteDialogOpen(true)
   }
 
   const confirmDelete = async () => {
-    if (selectedUser) {
+    if (selectedLocation) {
       setIsSubmitting(true)
       try {
-        await deleteUser(selectedUser.id)
+        await deleteLocation(selectedLocation.id)
       } catch (error) {
         console.error("Error during delete:", error)
       } finally {
@@ -54,7 +55,7 @@ export function UserTable() {
   const handleAddSubmit = async (values: any) => {
     setIsSubmitting(true)
     try {
-      await createUser(values)
+      await createLocation(values)
       setIsAddDialogOpen(false)
     } catch (error) {
       console.error("Error during create:", error)
@@ -64,10 +65,10 @@ export function UserTable() {
   }
 
   const handleEditSubmit = async (values: any) => {
-    if (selectedUser) {
+    if (selectedLocation) {
       setIsSubmitting(true)
       try {
-        await updateUser({ id: selectedUser.id, ...values })
+        await updateLocation({ id: selectedLocation.id, ...values })
         setIsEditDialogOpen(false)
       } catch (error) {
         console.error("Error during update:", error)
@@ -78,28 +79,17 @@ export function UserTable() {
   }
 
   const handleRefresh = () => {
-    refreshUsers()
     refreshLocations()
-  }
-
-  // Helper function to get role name safely
-  const getRoleName = (user: User) => {
-    if (!user.role_id) return "No role"
-    if (user.role?.name) return user.role.name
-
-    // Fallback to roles array if needed
-    const role = roles.find((r) => r.id === user.role_id)
-    return role ? role.name : `Role ${user.role_id}`
   }
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Users</CardTitle>
+        <CardTitle>Storage Locations</CardTitle>
         <div className="flex space-x-2">
           <Button className="bg-green-700 hover:bg-green-800 text-white" onClick={() => setIsAddDialogOpen(true)}>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add User
+            <Plus className="h-4 w-4 mr-2" />
+            Add Location
           </Button>
         </div>
       </CardHeader>
@@ -116,54 +106,58 @@ export function UserTable() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Location</TableHead>
+                <TableHead>Address</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-6">
+                  <TableCell colSpan={4} className="text-center py-6">
                     <div className="flex justify-center items-center">
                       <RefreshCw className="h-5 w-5 animate-spin mr-2" />
-                      Loading users...
+                      Loading locations...
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : users.length === 0 ? (
+              ) : locations.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-6">
+                  <TableCell colSpan={4} className="text-center py-6">
                     {error ? (
                       <div>
-                        <p>Error loading users.</p>
+                        <p>Error loading locations.</p>
                       </div>
                     ) : (
                       <div>
-                        <p>No users found. Click "Add User" to create one.</p>
+                        <p>No locations found. Click "Add Location" to create one.</p>
                       </div>
                     )}
                   </TableCell>
                 </TableRow>
               ) : (
-                users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.name || "N/A"}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>{getRoleName(user)}</TableCell>
+                locations.map((location) => (
+                  <TableRow key={location.id}>
+                    <TableCell className="font-medium">{location.name}</TableCell>
+                    <TableCell>{location.address || "—"}</TableCell>
                     <TableCell>
-                      {user.location_id && locations.find(loc => loc.id === user.location_id)?.name || 
-                       user.location?.name || 
-                       "Not assigned"}
+                      {location.is_active ? (
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          Active
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                          Inactive
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(user)}>
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(location)}>
                           <Pencil className="h-4 w-4" />
                           <span className="sr-only">Edit</span>
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(user)}>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(location)}>
                           <Trash2 className="h-4 w-4 text-red-500" />
                           <span className="sr-only">Delete</span>
                         </Button>
@@ -177,25 +171,21 @@ export function UserTable() {
         </div>
       </CardContent>
 
-      {/* Add User Dialog */}
-      <UserForm
+      {/* Add Location Dialog */}
+      <LocationForm
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onSubmit={handleAddSubmit}
-        roles={roles}
-        locations={locations}
         isLoading={isSubmitting}
       />
 
-      {/* Edit User Dialog */}
-      {selectedUser && (
-        <UserForm
+      {/* Edit Location Dialog */}
+      {selectedLocation && (
+        <LocationForm
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           onSubmit={handleEditSubmit}
-          user={selectedUser}
-          roles={roles}
-          locations={locations}
+          location={selectedLocation}
           isLoading={isSubmitting}
         />
       )}
@@ -206,8 +196,7 @@ export function UserTable() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the user <strong>{selectedUser?.name || selectedUser?.email}</strong>. This
-              action cannot be undone.
+              This will permanently delete the location <strong>{selectedLocation?.name}</strong>. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

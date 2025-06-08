@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -9,9 +7,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { createClient } from "@/lib/supabase"
+import { useAuth } from "@/lib/auth-context"
 
 export default function LoginPage() {
   const router = useRouter()
+  const { signIn } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
@@ -23,17 +24,51 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      // Bypass authentication for now
-      console.log("Authentication bypassed for:", email)
+      const supabase = createClient()
+      
+      // Sign in with password
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-      // Simulate loading
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      if (error) {
+        throw error
+      }
 
-      // Redirect to the main page
-      router.push("/")
+      if (data?.session && data?.user) {
+        // Get user role from the users table
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('role_id, role:roles(name)')
+          .eq('id', data.user.id)
+          .single()
+          
+        if (userError) {
+          console.error("Error fetching user role:", userError)
+        }
+        
+        // Extract user data and token
+        const userInfo = {
+          id: data.user.id,
+          email: data.user.email || "",
+          name: data.user.user_metadata?.name || data.user.email,
+          role_id: userData?.role_id,
+          role: userData?.role?.name
+        }
+        
+        const token = data.session.access_token
+        
+        // Store in auth context and cookies
+        signIn(userInfo, token)
+        
+        
+        // Navigate to protected dashboard
+        router.push("/")
+      }
     } catch (err: any) {
       console.error("Login error:", err)
-      setFormError("An error occurred during login")
+      setFormError(err.message || "Invalid email or password")
     } finally {
       setLoading(false)
     }
@@ -44,7 +79,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Sign in</CardTitle>
-          <CardDescription>Enter your email and password to access your account </CardDescription>
+          <CardDescription>Enter your email and password to access your account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -81,7 +116,7 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-gray-500">
-            Authentication is currently bypassed. Enter any credentials to continue.
+            Use your Supabase credentials to sign in.
           </p>
         </CardFooter>
       </Card>

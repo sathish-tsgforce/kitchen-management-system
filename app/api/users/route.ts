@@ -1,57 +1,98 @@
 import { NextResponse } from "next/server"
-import { supabase, supabaseAdmin } from "@/lib/supabase"
-import { createHash } from "crypto"
-
-// Helper function to hash passwords
-function hashPassword(password: string): string {
-  return createHash("sha256").update(password).digest("hex")
-}
+import { createClient } from "@supabase/supabase-js"
+import { supabase,supabaseAdmin } from "@/lib/supabase"
 
 export async function GET() {
   try {
     console.log("[API] GET /api/users: Fetching users with roles")
 
-    const { data, error } = await supabase
-      .from("users")
-      .select(`
-        id,
-        email,
-        name,
-        role_id,
-        role:roles(id, name)
-      `)
-      .order("name")
+    // If we have admin client, get user details from auth
+    if (supabaseAdmin) {
+      try {
+        // Get all users from auth
+        const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers()
 
-    if (error) {
-      console.error("[API] GET /api/users: Database error:", {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code,
-      })
+        if (authError) {
+          console.error("[API] GET /api/users: Auth error:", {
+            message: authError.message
+          })
 
+          return NextResponse.json(
+            {
+              error: "Failed to fetch users from auth system",
+              details: authError.message,
+            },
+            { status: 500 },
+          )
+        }
+
+        // First get all users from the database with their roles and locations
+        const { data: dbUsers, error: dbError } = await supabase
+          .from("users")
+          .select(`
+            id,
+            role_id,
+            role:roles(id, name),
+            location_id,
+            location:locations(id, name, address, is_active)
+          `)
+
+        if (dbError) {
+          console.error("[API] GET /api/users: Database error:", {
+            message: dbError.message,
+            details: dbError.details,
+            hint: dbError.hint,
+            code: dbError.code,
+          })
+
+          return NextResponse.json(
+            {
+              error: "Failed to fetch users",
+              details: dbError.message,
+              hint: dbError.hint,
+              code: dbError.code,
+            },
+            { status: 500 },
+          )
+        }
+
+        // Combine the data
+        const combinedUsers = dbUsers.map(dbUser => {
+          const authUser = authUsers.users.find(u => u.id === dbUser.id)
+          return {
+            id: dbUser.id,
+            email: authUser?.email || "Unknown",
+            name: authUser?.user_metadata?.name || authUser?.email || "Unknown",
+            role_id: dbUser.role_id,
+            role: dbUser.role ? dbUser.role[0] : null,
+            location_id: dbUser.location_id,
+            location: dbUser.location && dbUser.location.length > 0 ? dbUser.location[0] : null,
+          }
+        })
+
+        console.log(`[API] GET /api/users: Successfully fetched ${combinedUsers.length} users`)
+        return NextResponse.json(combinedUsers)
+      } catch (authError: any) {
+        console.error("[API] GET /api/users: Auth error:", {
+          message: authError.message,
+          stack: authError.stack,
+        })
+
+        return NextResponse.json(
+          {
+            error: "Unauthorized access",
+          },
+          { status: 401 },
+        )
+      }
+    } else {
       return NextResponse.json(
-        {
-          error: "Failed to fetch users",
-          details: error.message,
-          hint: error.hint,
-          code: error.code,
-        },
-        { status: 500 },
-      )
+          {
+            error: "Unauthorized access",
+          },
+          { status: 401 },
+        )
     }
-
-    // Transform the data to match the expected format
-    const transformedData = data.map((user) => ({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role_id: user.role_id,
-      role: user.role ? user.role[0]?.name : null,
-    }))
-
-    console.log(`[API] GET /api/users: Successfully fetched ${transformedData.length} users`)
-    return NextResponse.json(transformedData)
   } catch (error: any) {
     console.error("[API] GET /api/users: Unhandled exception:", {
       message: error.message,
@@ -77,16 +118,12 @@ export async function POST(request: Request) {
       password: userData.password ? "********" : undefined,
     })
 
-    const { email, password, name, role_id } = userData
+    const { email, password, name, role_id, location_id } = userData
 
     // Validate required fields
     if (!email || !password || !name || role_id === undefined) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
-
-    // Hash the password for database storage
-    // NOTE: This is not for auth, just to satisfy the database constraint
-    const hashedPassword = hashPassword(password)
 
     // Check if we have the admin client available
     if (supabaseAdmin) {
@@ -121,22 +158,18 @@ export async function POST(request: Request) {
 
       console.log("[API] POST /api/users: User created in auth system:", authData.user.id)
 
-      // Now insert the user into our users table
+      // Now insert the user into our users table with just role_id and location_id
       const { data, error } = await supabase
         .from("users")
         .insert({
           id: authData.user.id,
-          email,
-          name,
           role_id,
-          password: hashedPassword, // Include the hashed password
+          location_id
         })
         .select(`
           id,
-          email,
-          name,
           role_id,
-          role:roles(id, name)
+          location_id
         `)
         .single()
 
@@ -167,13 +200,13 @@ export async function POST(request: Request) {
         )
       }
 
-      // Transform the data to match the expected format
+      // Combine auth and DB data
       const transformedData = {
         id: data.id,
-        email: data.email,
-        name: data.name,
+        email: authData.user.email,
+        name: authData.user.user_metadata?.name || authData.user.email,
         role_id: data.role_id,
-        role: data.role ? data.role[0]?.name : null,
+        location_id: data.location_id
       }
 
       console.log("[API] POST /api/users: User created successfully:", transformedData)
@@ -217,17 +250,13 @@ export async function POST(request: Request) {
         .from("users")
         .insert({
           id: authData.user.id,
-          email,
-          name,
           role_id,
-          password: hashedPassword, // Include the hashed password
+          location_id
         })
         .select(`
           id,
-          email,
-          name,
           role_id,
-          role:roles(id, name)
+          location_id
         `)
         .single()
 
@@ -250,13 +279,13 @@ export async function POST(request: Request) {
         )
       }
 
-      // Transform the data to match the expected format
+      // Combine auth and DB data
       const transformedData = {
         id: data.id,
-        email: data.email,
-        name: data.name,
+        email: authData.user.email,
+        name: authData.user.user_metadata?.name || authData.user.email,
         role_id: data.role_id,
-        role: data.role ? data.role[0]?.name : null,
+        location_id: data.location_id
       }
 
       console.log("[API] POST /api/users: User created successfully with verification required:", transformedData)

@@ -126,7 +126,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         return ingredients
       }
 
-      const { data, error } = await supabase.from("ingredients").select("*")
+      const { data, error } = await supabase
+        .from("ingredients")
+        .select(`
+          *,
+          location:locations(id, name)
+        `)
 
       if (handleRateLimitError(error)) {
         console.warn("Rate limited when fetching ingredients, using cached data")
@@ -665,7 +670,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Otherwise, insert new ingredient
-      const { data, error } = await supabase.from("ingredients").insert([ingredientWithoutId]).select()
+      const { data, error } = await supabase
+        .from("ingredients")
+        .insert([ingredientWithoutId])
+        .select(`
+          *,
+          location:locations(id, name)
+        `)
 
       if (handleRateLimitError(error)) {
         throw new Error("Rate limit exceeded. Please try again later.")
@@ -691,7 +702,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const updateIngredient = async (id: number, updatedFields: Partial<Ingredient>) => {
     try {
-      const { error } = await supabase.from("ingredients").update(updatedFields).eq("id", id)
+      const { data, error } = await supabase
+        .from("ingredients")
+        .update(updatedFields)
+        .eq("id", id)
+        .select(`
+          *,
+          location:locations(id, name)
+        `)
+        .single()
 
       if (handleRateLimitError(error)) {
         throw new Error("Rate limit exceeded. Please try again later.")
@@ -699,11 +718,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error
 
-      // Update local state
-      const updatedIngredients = ingredients.map((ingredient) =>
-        ingredient.id === id ? { ...ingredient, ...updatedFields } : ingredient,
-      )
-      setIngredients(updatedIngredients)
+      // Update local state with the returned data that includes location info
+      if (data) {
+        const updatedIngredients = ingredients.map((ingredient) =>
+          ingredient.id === id ? data as Ingredient : ingredient,
+        )
+        setIngredients(updatedIngredients)
+      } else {
+        // Fallback to the old way if no data returned
+        const updatedIngredients = ingredients.map((ingredient) =>
+          ingredient.id === id ? { ...ingredient, ...updatedFields } : ingredient,
+        )
+        setIngredients(updatedIngredients)
+      }
 
       // Refresh ingredients to ensure consistency
       await fetchIngredients()

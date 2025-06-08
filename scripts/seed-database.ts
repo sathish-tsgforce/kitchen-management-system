@@ -1,10 +1,10 @@
 import { createClient } from "@supabase/supabase-js"
 import dotenv from "dotenv"
 
-dotenv.config()
+dotenv.config({ path: ".env.local" })
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const supabaseServiceKey = process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error("Missing Supabase URL or service role key")
@@ -32,13 +32,7 @@ const users = [
     password: "password123",
     name: "Chef User",
     role_id: 2,
-  },
-  {
-    email: "server@example.com",
-    password: "password123",
-    name: "Server User",
-    role_id: 3,
-  },
+  }
 ]
 
 const menuItems = [
@@ -85,20 +79,21 @@ const menuItems = [
 ]
 
 const ingredients = [
-  { id: 1, name: "Pizza Dough", quantity: 500, unit: "g", price: 3.99, category: "Grains", location: "Refrigerator" },
+  { id: 1, name: "Pizza Dough", quantity: 500, threshold_quantity: 100, unit: "g", price: 3.99, category: "Grains", location: "Refrigerator" },
   {
     id: 2,
     name: "Tomato Sauce",
     quantity: 300,
+    threshold_quantity: 50,
     unit: "g",
     price: 2.49,
     category: "Vegetables",
     location: "Dry Storage",
-  },
-  {
+  },  {
     id: 3,
     name: "Fresh Mozzarella",
     quantity: 350,
+    threshold_quantity: 100,
     unit: "g",
     price: 4.99,
     category: "Dairy",
@@ -108,16 +103,17 @@ const ingredients = [
     id: 4,
     name: "Fresh Basil Leaves",
     quantity: 15,
+    threshold_quantity: 5,
     unit: "leaves",
     price: 1.99,
     category: "Herbs",
     location: "Refrigerator",
   },
-  { id: 5, name: "Olive Oil", quantity: 200, unit: "ml", price: 8.99, category: "Oils", location: "Dry Storage" },
-  {
+  { id: 5, name: "Olive Oil", quantity: 200, threshold_quantity: 50, unit: "ml", price: 8.99, category: "Oils", location: "Dry Storage" },  {
     id: 6,
     name: "Broccoli Florets",
     quantity: 400,
+    threshold_quantity: 100,
     unit: "g",
     price: 2.99,
     category: "Vegetables",
@@ -127,18 +123,19 @@ const ingredients = [
     id: 7,
     name: "Bell Peppers",
     quantity: 3,
+    threshold_quantity: 2,
     unit: "medium",
     price: 1.5,
     category: "Vegetables",
     location: "Refrigerator",
   },
-  { id: 8, name: "Carrots", quantity: 1, unit: "large", price: 0.75, category: "Vegetables", location: "Refrigerator" },
-  { id: 9, name: "Soy Sauce", quantity: 100, unit: "ml", price: 3.49, category: "Condiments", location: "Dry Storage" },
-  { id: 10, name: "Sesame Oil", quantity: 50, unit: "ml", price: 5.99, category: "Oils", location: "Dry Storage" },
+  { id: 8, name: "Carrots", quantity: 1, threshold_quantity: 1, unit: "large", price: 0.75, category: "Vegetables", location: "Refrigerator" },  { id: 9, name: "Soy Sauce", quantity: 100, threshold_quantity: 25, unit: "ml", price: 3.49, category: "Condiments", location: "Dry Storage" },
+  { id: 10, name: "Sesame Oil", quantity: 50, threshold_quantity: 15, unit: "ml", price: 5.99, category: "Oils", location: "Dry Storage" },
   {
     id: 11,
     name: "All-Purpose Flour",
     quantity: 1000,
+    threshold_quantity: 200,
     unit: "g",
     price: 2.99,
     category: "Grains",
@@ -148,6 +145,7 @@ const ingredients = [
     id: 12,
     name: "Unsalted Butter",
     quantity: 400,
+    threshold_quantity: 1200,
     unit: "g",
     price: 4.49,
     category: "Dairy",
@@ -156,6 +154,7 @@ const ingredients = [
   {
     id: 13,
     name: "Brown Sugar",
+    threshold_quantity: 5000,
     quantity: 300,
     unit: "g",
     price: 2.29,
@@ -166,15 +165,17 @@ const ingredients = [
     id: 14,
     name: "Granulated Sugar",
     quantity: 500,
+    threshold_quantity: 5000,
     unit: "g",
     price: 1.99,
     category: "Sweeteners",
     location: "Dry Storage",
   },
-  { id: 15, name: "Eggs", quantity: 6, unit: "large", price: 3.49, category: "Dairy", location: "Refrigerator" },
+  { id: 15, name: "Eggs", quantity: 6, unit: "large", price: 3.49, threshold_quantity: 50, category: "Dairy", location: "Refrigerator" },
   {
     id: 16,
     name: "Chocolate Chips",
+    threshold_quantity: 5000,
     quantity: 200,
     unit: "g",
     price: 3.99,

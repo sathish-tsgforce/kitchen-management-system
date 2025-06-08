@@ -12,7 +12,7 @@ export default function UsersPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
-  const { users, roles, isLoading, error, debugInfo, createUser, updateUser, deleteUser, refreshUsers, refreshRoles } =
+  const { users, roles, locations, isLoading, error, debugInfo, createUser, updateUser, deleteUser, refreshUsers, refreshRoles, refreshLocations } =
     useUsers()
 
   const handleCreateUser = async (userData) => {
@@ -61,6 +61,7 @@ export default function UsersPage() {
   const handleRefresh = () => {
     refreshUsers()
     refreshRoles()
+    refreshLocations()
   }
 
   return (
@@ -71,10 +72,6 @@ export default function UsersPage() {
           <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
-          </Button>
-          <Button onClick={() => setIsFormOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add User
           </Button>
         </div>
       </div>
@@ -98,6 +95,7 @@ export default function UsersPage() {
         onSubmit={selectedUser ? handleUpdateUser : handleCreateUser}
         user={selectedUser}
         roles={roles}
+        locations={locations}
         isLoading={isSubmitting}
       />
     </div>

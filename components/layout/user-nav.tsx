@@ -1,6 +1,5 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,7 +15,6 @@ import { LogOut, Settings, User } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 
 export function UserNav() {
-  const router = useRouter()
   const { user, signOut } = useAuth()
 
   // Get initials for avatar fallback
@@ -29,13 +27,8 @@ export function UserNav() {
       .toUpperCase()
   }
 
-  const handleSignOut = async () => {
-    try {
-      await signOut()
-      router.push("/login")
-    } catch (error) {
-      console.error("Error signing out:", error)
-    }
+  const handleSignOut = () => {
+    signOut()
   }
 
   return (
@@ -69,7 +62,7 @@ export function UserNav() {
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out (Disabled)</span>
+          <span>Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

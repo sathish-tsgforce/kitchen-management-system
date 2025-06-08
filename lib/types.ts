@@ -33,7 +33,13 @@ export interface Ingredient {
   unit: string
   price?: number
   category?: string
-  location?: string
+  location_id: number
+  location?: {
+    id: number
+    name: string
+  }
+  threshold_quantity?: number
+  storage_type?: string
 }
 
 export interface MenuItem {
@@ -72,9 +78,21 @@ export interface User {
   email: string
   name?: string
   role_id?: number
+  location_id?: number
+  location?: {
+    id: number
+    name: string
+  }
 }
 
 export interface Role {
   id: number
   name: string
+}
+
+export interface Location {
+  id: number
+  name: string
+  address?: string
+  is_active: boolean
 }

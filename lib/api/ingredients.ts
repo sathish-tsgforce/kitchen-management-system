@@ -4,7 +4,12 @@ import type { Ingredient } from "@/lib/types"
 
 export async function fetchIngredients(): Promise<Ingredient[]> {
   try {
-    const { data, error } = await supabase.from("ingredients").select("*")
+    const { data, error } = await supabase
+      .from("ingredients")
+      .select(`
+        *,
+        location:locations(id, name)
+      `)
 
     if (error) throw error
     return data as Ingredient[]
@@ -43,7 +48,10 @@ export async function addIngredient(ingredient: Omit<Ingredient, "id">): Promise
         .from("ingredients")
         .update(ingredientWithoutId)
         .eq("id", existingId)
-        .select()
+        .select(`
+          *,
+          location:locations(id, name)
+        `)
 
       if (updateError) throw updateError
 
@@ -51,7 +59,13 @@ export async function addIngredient(ingredient: Omit<Ingredient, "id">): Promise
     }
 
     // Use insert with onConflict to handle potential duplicates
-    const { data, error } = await supabase.from("ingredients").insert([ingredientWithoutId]).select()
+    const { data, error } = await supabase
+      .from("ingredients")
+      .insert([ingredientWithoutId])
+      .select(`
+        *,
+        location:locations(id, name)
+      `)
 
     if (error) {
       console.error("Supabase error details:", error)
@@ -65,13 +79,23 @@ export async function addIngredient(ingredient: Omit<Ingredient, "id">): Promise
   }
 }
 
-export async function updateIngredient(id: number, updatedFields: Partial<Ingredient>): Promise<void> {
+export async function updateIngredient(id: number, updatedFields: Partial<Ingredient>): Promise<Ingredient | null> {
   try {
     // Ensure we're not trying to update the ID
     const { id: _, ...fieldsWithoutId } = updatedFields as any
 
-    const { error } = await supabase.from("ingredients").update(fieldsWithoutId).eq("id", id)
+    const { data, error } = await supabase
+      .from("ingredients")
+      .update(fieldsWithoutId)
+      .eq("id", id)
+      .select(`
+        *,
+        location:locations(id, name)
+      `)
+      .single()
+      
     if (error) throw error
+    return data as Ingredient
   } catch (err) {
     console.error("Error updating ingredient:", err)
     throw err

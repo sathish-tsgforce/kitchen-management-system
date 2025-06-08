@@ -2,15 +2,16 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { Ingredient } from "@/lib/types"
+import type { Ingredient, Location } from "@/lib/types"
 import { useData } from "@/lib/context/data-context"
 import { DialogClose } from "@/components/ui/dialog"
 import { toast } from "@/components/ui/use-toast"
+import { supabase } from "@/lib/supabase"
 
 interface InventoryFormProps {
   ingredient?: Ingredient
@@ -18,6 +19,7 @@ interface InventoryFormProps {
 
 export default function InventoryForm({ ingredient }: InventoryFormProps) {
   const { addIngredient, updateIngredient } = useData()
+  const [locations, setLocations] = useState<Location[]>([])
 
   const [formData, setFormData] = useState({
     name: ingredient?.name || "",
@@ -25,15 +27,44 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
     unit: ingredient?.unit || "",
     price: ingredient?.price || 0,
     category: ingredient?.category || "",
-    location: ingredient?.location || "",
+    location_id: ingredient?.location_id || 0,
     threshold_quantity: ingredient?.threshold_quantity || 10,
+    storage_type: ingredient?.storage_type || "Standard",
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const categories = ["Vegetables", "Fruits", "Dairy", "Meat", "Seafood", "Grains", "Spices", "Oils", "Other"]
-  const locations = ["Main Kitchen", "Dry Storage", "Refrigerator", "Freezer", "Spice Rack", "Other"]
   const units = ["g", "kg", "ml", "l", "pcs", "bunch", "tbsp", "tsp", "cup"]
+  const storageTypes = ["Standard", "Refrigerated", "Frozen", "Dry", "Vacuum Sealed", "Canned"]
+
+  useEffect(() => {
+    // Fetch locations
+    const fetchLocations = async () => {
+      const { data, error } = await supabase
+        .from("locations")
+        .select("*")
+        .eq("is_active", true)
+        .order("name")
+      
+      if (error) {
+        console.error("Error fetching locations:", error)
+        return
+      }
+      
+      setLocations(data || [])
+      
+      // Set default location if none is selected
+      if (!ingredient?.location_id && data && data.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          location_id: data[0].id
+        }))
+      }
+    }
+    
+    fetchLocations()
+  }, [ingredient?.location_id])
 
   const handleChange = (field: string, value: string | number) => {
     setFormData({
@@ -63,8 +94,9 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
           unit: formData.unit,
           price: formData.price || 0,
           category: formData.category || "",
-          location: formData.location || "",
+          location_id: formData.location_id,
           threshold_quantity: formData.threshold_quantity || 10,
+          storage_type: formData.storage_type || "Standard",
         }
 
         console.log("Submitting new ingredient:", newIngredientData)
@@ -218,17 +250,39 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
           </div>
 
           <div>
-            <Label htmlFor="location" className="text-sm font-medium">
+            <Label htmlFor="location_id" className="text-sm font-medium">
               Location
             </Label>
-            <Select value={formData.location} onValueChange={(value) => handleChange("location", value)}>
-              <SelectTrigger id="location" className="h-8">
+            <Select 
+              value={formData.location_id.toString()} 
+              onValueChange={(value) => handleChange("location_id", parseInt(value))}
+              required
+            >
+              <SelectTrigger id="location_id" className="h-8">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
                 {locations.map((location) => (
-                  <SelectItem key={location} value={location} className="cursor-pointer">
-                    {location}
+                  <SelectItem key={location.id} value={location.id.toString()} className="cursor-pointer">
+                    {location.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="storage_type" className="text-sm font-medium">
+              Storage Type
+            </Label>
+            <Select value={formData.storage_type} onValueChange={(value) => handleChange("storage_type", value)}>
+              <SelectTrigger id="storage_type" className="h-8">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                {storageTypes.map((type) => (
+                  <SelectItem key={type} value={type} className="cursor-pointer">
+                    {type}
                   </SelectItem>
                 ))}
                 <SelectItem value="custom" className="cursor-pointer">

@@ -3,12 +3,15 @@
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "@/components/ui/use-toast"
 import type { User, NewUser, UpdateUser, UserRole } from "@/lib/types/user"
+import type { Location } from "@/lib/api/locations"
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([])
   const [roles, setRoles] = useState<UserRole[]>([])
+  const [locations, setLocations] = useState<Location[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [debugInfo, setDebugInfo] = useState<any>(null)
 
   // Helper function to handle API responses
   const handleApiResponse = async (response: Response) => {
@@ -50,6 +53,7 @@ export function useUsers() {
     } catch (err: any) {
       console.error("Error fetching users:", err)
       setError(err.message)
+      setDebugInfo(err)
       toast({
         title: "Error",
         description: `Failed to load users: ${err.message}`,
@@ -71,6 +75,22 @@ export function useUsers() {
       toast({
         title: "Error",
         description: `Failed to load roles: ${err.message}`,
+        variant: "destructive",
+      })
+    }
+  }, [])
+
+  // Fetch locations
+  const fetchLocations = useCallback(async () => {
+    try {
+      const response = await fetch("/api/locations")
+      const data = await handleApiResponse(response)
+      setLocations(data)
+    } catch (err: any) {
+      console.error("Error fetching locations:", err)
+      toast({
+        title: "Error",
+        description: `Failed to load locations: ${err.message}`,
         variant: "destructive",
       })
     }
@@ -189,17 +209,21 @@ export function useUsers() {
   useEffect(() => {
     fetchRoles().catch((err) => console.error("Initial roles fetch failed:", err))
     fetchUsers().catch((err) => console.error("Initial users fetch failed:", err))
-  }, [fetchRoles, fetchUsers])
+    fetchLocations().catch((err) => console.error("Initial locations fetch failed:", err))
+  }, [fetchRoles, fetchUsers, fetchLocations])
 
   return {
     users,
     roles,
+    locations,
     isLoading,
     error,
+    debugInfo,
     createUser,
     updateUser,
     deleteUser,
     refreshUsers: fetchUsers,
     refreshRoles: fetchRoles,
+    refreshLocations: fetchLocations,
   }
 }
