@@ -1,16 +1,3 @@
--- Create locations table if it doesn't exist
-CREATE TABLE IF NOT EXISTS locations (
-  id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  address TEXT,
-  is_active BOOLEAN DEFAULT true
-);
-
--- Add a default location if none exists
-INSERT INTO locations (name, address, is_active)
-SELECT 'Main Kitchen', '123 Main St', true
-WHERE NOT EXISTS (SELECT 1 FROM locations);
-
 -- Add location_id column to ingredients table
 ALTER TABLE ingredients ADD COLUMN location_id INTEGER;
 

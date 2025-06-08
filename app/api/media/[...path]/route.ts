@@ -1,9 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
-
-
-// Create a Supabase client with the service role key
-const supabaseAdmin = createClient(process.env.SUPABASE_URL || "", process.env.SUPABASE_SERVICE_ROLE_KEY || "")
+import { supabase, supabaseAdmin } from "@/lib/supabase"
 
 // The bucket name
 const BUCKET_NAME = "fortitude-culina-media"
