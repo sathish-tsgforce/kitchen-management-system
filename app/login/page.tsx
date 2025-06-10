@@ -37,15 +37,15 @@ export default function LoginPage() {
       }
 
       if (data?.session && data?.user) {
-        // Get user role from the users table
+        // Get user role and location from the users table
         const { data: userData, error: userError } = await supabase
           .from('users')
-          .select('role_id, role:roles(name)')
+          .select('role_id, role:roles(name), location_id, location:locations(id, name)')
           .eq('id', data.user.id)
           .single()
           
         if (userError) {
-          console.error("Error fetching user role:", userError)
+          console.error("Error fetching user data:", userError)
         }
         
         // Extract user data and token
@@ -54,15 +54,16 @@ export default function LoginPage() {
           email: data.user.email || "",
           name: data.user.user_metadata?.name || data.user.email,
           role_id: userData?.role_id,
-          role: userData?.role?.name
+          role: userData?.role?.name,
+          location_id: userData?.location_id,
+          location: userData?.location
         }
         
         const token = data.session.access_token
         
         // Store in auth context and cookies
         signIn(userInfo, token)
-        
-        
+      
         // Navigate to protected dashboard
         router.push("/")
       }

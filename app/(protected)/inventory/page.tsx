@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import InventoryForm from "@/components/inventory/inventory-form"
 import { useData } from "@/lib/context/data-context"
+import { useAuth } from "@/lib/auth-context"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,12 +33,16 @@ export default function InventoryPage() {
   const [showLowQuantityOnly, setShowLowQuantityOnly] = useState(false)
   const { toast } = useToast()
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const { user } = useAuth()
 
   // Get unique categories for filter dropdown
   const categories = ["all", ...new Set(ingredients.map((ingredient) => ingredient.category))].filter(Boolean)
+  
+  const userIngredients = user?.location_id
+    ? ingredients.filter((ingredient) => ingredient.location?.id === user.location_id) : ingredients
 
   // Sort ingredients
-  const sortedIngredients = [...ingredients].sort((a, b) => {
+  const sortedIngredients = [...userIngredients].sort((a, b) => {
     if (!sortConfig) return 0
 
     const key = sortConfig.key as keyof typeof a

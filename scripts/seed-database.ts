@@ -88,7 +88,7 @@ const ingredients = [
     unit: "g",
     price: 2.49,
     category: "Vegetables",
-    location: "Dry Storage",
+    storage_type: "Dry Storage",
   },  {
     id: 3,
     name: "Fresh Mozzarella",
@@ -97,7 +97,7 @@ const ingredients = [
     unit: "g",
     price: 4.99,
     category: "Dairy",
-    location: "Refrigerator",
+    storage_type: "Refrigerator",
   },
   {
     id: 4,
@@ -107,7 +107,7 @@ const ingredients = [
     unit: "leaves",
     price: 1.99,
     category: "Herbs",
-    location: "Refrigerator",
+    storage_type: "Refrigerator",
   },
   { id: 5, name: "Olive Oil", quantity: 200, threshold_quantity: 50, unit: "ml", price: 8.99, category: "Oils", location: "Dry Storage" },  {
     id: 6,

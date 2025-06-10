@@ -10,6 +10,11 @@ type User = {
   name?: string
   role_id?: number
   role?: string
+  location_id?: number
+  location?: {
+    id: number
+    name: string
+  }
 }
 
 type AuthContextType = {
