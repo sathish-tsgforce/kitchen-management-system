@@ -12,6 +12,7 @@ import { useData } from "@/lib/context/data-context"
 import { DialogClose } from "@/components/ui/dialog"
 import { toast } from "@/components/ui/use-toast"
 import { supabase } from "@/lib/supabase"
+import { useAuth } from "@/lib/auth-context"
 
 interface InventoryFormProps {
   ingredient?: Ingredient
@@ -19,6 +20,7 @@ interface InventoryFormProps {
 
 export default function InventoryForm({ ingredient }: InventoryFormProps) {
   const { addIngredient, updateIngredient } = useData()
+  const { user } = useAuth()
   const [locations, setLocations] = useState<Location[]>([])
 
   const [formData, setFormData] = useState({
@@ -54,8 +56,15 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
       
       setLocations(data || [])
       
-      // Set default location if none is selected
-      if (!ingredient?.location_id && data && data.length > 0) {
+      // For Chef users, set location to their assigned location
+      if (user?.role === "Chef" && user?.location_id) {
+        setFormData(prev => ({
+          ...prev,
+          location_id: user.location_id
+        }))
+      }
+      // For other users, set default location if none is selected
+      else if (!ingredient?.location_id && data && data.length > 0) {
         setFormData(prev => ({
           ...prev,
           location_id: data[0].id
@@ -64,7 +73,7 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
     }
     
     fetchLocations()
-  }, [ingredient?.location_id])
+  }, [ingredient?.location_id, user?.role, user?.location_id])
 
   const handleChange = (field: string, value: string | number) => {
     setFormData({
@@ -253,22 +262,30 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
             <Label htmlFor="location_id" className="text-sm font-medium">
               Location
             </Label>
-            <Select 
-              value={formData.location_id.toString()} 
-              onValueChange={(value) => handleChange("location_id", parseInt(value))}
-              required
-            >
-              <SelectTrigger id="location_id" className="h-8">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                {locations.map((location) => (
-                  <SelectItem key={location.id} value={location.id.toString()} className="cursor-pointer">
-                    {location.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {user?.role === "Chef" ? (
+              // Read-only location display for Chef users
+              <div className="border rounded-md px-3 py-1 h-8 flex items-center text-sm text-gray-700 bg-gray-50">
+                {locations.find(loc => loc.id === formData.location_id)?.name || "Loading..."}
+              </div>
+            ) : (
+              // Selectable location dropdown for Admin users
+              <Select 
+                value={formData.location_id.toString()} 
+                onValueChange={(value) => handleChange("location_id", parseInt(value))}
+                required
+              >
+                <SelectTrigger id="location_id" className="h-8">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {locations.map((location) => (
+                    <SelectItem key={location.id} value={location.id.toString()} className="cursor-pointer">
+                      {location.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <div>

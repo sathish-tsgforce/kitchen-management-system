@@ -14,7 +14,10 @@ import { Label } from "@/components/ui/label"
 import { useTextSize } from "@/lib/context/text-size-context"
 import { TextSizeControls } from "@/components/accessibility/text-size-controls"
 import { Button } from "@/components/ui/button"
-import type { Recipe } from "@/lib/types"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useAuth } from "@/lib/auth-context"
+import { supabase } from "@/lib/supabase"
+import type { Recipe, Location } from "@/lib/types"
 
 interface RecipeCalculatorProps {
   recipe: Recipe
@@ -26,9 +29,44 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
   const [inputValue, setInputValue] = useState(recipe.standard_serving_pax.toString())
   const sliderRef = useRef<HTMLDivElement>(null)
   const { textSize } = useTextSize()
+  const { user } = useAuth()
+  
+  // State for locations and selected location
+  const [locations, setLocations] = useState<Location[]>([])
+  const [selectedLocationId, setSelectedLocationId] = useState<number | undefined>(
+    user?.role === "Chef" ? user.location_id : undefined
+  )
 
-  // Use the cached inventory ingredients from React Query
-  const { data: inventoryIngredients = [] } = useIngredients()
+  // Fetch locations for Admin users
+  useEffect(() => {
+    if (user?.role === "Admin") {
+      const fetchLocations = async () => {
+        const { data, error } = await supabase
+          .from("locations")
+          .select("*")
+          .eq("is_active", true)
+          .order("name")
+        
+        if (error) {
+          console.error("Error fetching locations:", error)
+          return
+        }
+        
+        setLocations(data || [])
+        
+        // Set default location to Central Kitchen (ID 1) for Admin
+        if (data && data.length > 0) {
+          const centralKitchen = data.find(loc => loc.name === "Central Kitchen") || data[0]
+          setSelectedLocationId(centralKitchen.id)
+        }
+      }
+      
+      fetchLocations()
+    }
+  }, [user?.role])
+
+  // Use the cached inventory ingredients from React Query, filtered by location
+  const { data: inventoryIngredients = [] } = useIngredients(selectedLocationId)
 
   // Update input when slider changes
   useEffect(() => {
@@ -57,6 +95,11 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
       setServingSize(maxValue)
       setInputValue(maxValue.toString())
     }
+  }
+
+  // Handle location change
+  const handleLocationChange = (locationId: string) => {
+    setSelectedLocationId(parseInt(locationId))
   }
 
   // Increment/decrement serving size
@@ -178,6 +221,39 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
         </h2>
         <TextSizeControls />
       </div>
+
+      {/* Location selector for Admin users */}
+      {user?.role === "Admin" && (
+        <div className="mb-4">
+          <Label htmlFor="location-select" className={`${textClasses.subheading} font-medium mb-2 block`}>
+            Select Kitchen Location
+          </Label>
+          <Select 
+            value={selectedLocationId?.toString() || ""} 
+            onValueChange={handleLocationChange}
+          >
+            <SelectTrigger id="location-select" className="w-full md:w-64">
+              <SelectValue placeholder="Select location" />
+            </SelectTrigger>
+            <SelectContent>
+              {locations.map((location) => (
+                <SelectItem key={location.id} value={location.id.toString()} className="cursor-pointer">
+                  {location.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Display current location for Chef users */}
+      {user?.role === "Chef" && user?.location?.name && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+          <p className={`${textClasses.body}`}>
+            <span className="font-medium">Current Kitchen:</span> {user.location.name}
+          </p>
+        </div>
+      )}
 
       <Card className="w-full">
         <CardHeader>

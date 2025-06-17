@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { fetchIngredients, addIngredient, updateIngredient, deleteIngredient } from "@/lib/api/ingredients"
 import type { Ingredient } from "@/lib/types"
 import { toast } from "@/components/ui/use-toast"
+import { useAuth } from "@/lib/auth-context"
 
 // Keys for React Query
 export const ingredientKeys = {
@@ -12,13 +13,34 @@ export const ingredientKeys = {
   list: (filters: any) => [...ingredientKeys.lists(), { filters }] as const,
   details: () => [...ingredientKeys.all, "detail"] as const,
   detail: (id: number) => [...ingredientKeys.details(), id] as const,
+  byLocation: (locationId: number) => [...ingredientKeys.lists(), { locationId }] as const,
 }
 
 // Hook to fetch all ingredients
-export function useIngredients() {
+export function useIngredients(locationId?: number) {
+  const { user } = useAuth()
+  
+  // Determine which location to use
+  const effectiveLocationId = locationId || 
+    (user?.role === "Chef" ? user?.location_id : undefined)
+  
   return useQuery({
-    queryKey: ingredientKeys.lists(),
-    queryFn: fetchIngredients,
+    queryKey: effectiveLocationId 
+      ? ingredientKeys.byLocation(effectiveLocationId)
+      : ingredientKeys.lists(),
+    queryFn: async () => {
+      const ingredients = await fetchIngredients()
+      
+      // If locationId is provided or user is Chef, filter by location
+      if (effectiveLocationId) {
+        return ingredients.filter(ingredient => 
+          ingredient.location_id === effectiveLocationId
+        )
+      }
+      
+      // Admin sees all ingredients
+      return ingredients
+    },
   })
 }
 
