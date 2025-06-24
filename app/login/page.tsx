@@ -17,6 +17,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [resetEmailSent, setResetEmailSent] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -75,50 +77,124 @@ export default function LoginPage() {
     }
   }
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setFormError(null)
+    setLoading(true)
+
+    try {
+      const supabase = createClient()
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+
+      if (error) {
+        throw error
+      }
+
+      setResetEmailSent(true)
+    } catch (err: any) {
+      console.error("Password reset error:", err)
+      setFormError(err.message || "Error sending password reset email")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Sign in</CardTitle>
-          <CardDescription>Enter your email and password to access your account</CardDescription>
+          <CardTitle className="text-2xl font-bold">
+            {showForgotPassword ? "Reset Password" : "Sign in"}
+          </CardTitle>
+          <CardDescription>
+            {showForgotPassword 
+              ? "Enter your email to receive a password reset link"
+              : "Enter your email and password to access your account"
+            }
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {formError && (
-              <Alert variant="destructive">
-                <AlertDescription>{formError}</AlertDescription>
+          {resetEmailSent ? (
+            <div className="text-center space-y-4">
+              <Alert>
+                <AlertDescription>
+                  Password reset link has been sent to your email. Please check your inbox.
+                </AlertDescription>
               </Alert>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your.email@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <Button 
+                onClick={() => {
+                  setShowForgotPassword(false)
+                  setResetEmailSent(false)
+                  setEmail("")
+                }} 
+                variant="outline" 
+                className="w-full"
+              >
+                Back to Sign In
+              </Button>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign in"}
-            </Button>
-          </form>
+          ) : (
+            <form onSubmit={showForgotPassword ? handleForgotPassword : handleSubmit} className="space-y-4">
+              {formError && (
+                <Alert variant="destructive">
+                  <AlertDescription>{formError}</AlertDescription>
+                </Alert>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="your.email@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              {!showForgotPassword && (
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+              )}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading 
+                  ? (showForgotPassword ? "Sending..." : "Signing in...") 
+                  : (showForgotPassword ? "Send Reset Link" : "Sign in")
+                }
+              </Button>
+              {showForgotPassword && (
+                <Button 
+                  type="button" 
+                  onClick={() => setShowForgotPassword(false)} 
+                  variant="outline" 
+                  className="w-full"
+                >
+                  Back to Sign In
+                </Button>
+              )}
+            </form>
+          )}
         </CardContent>
         <CardFooter className="flex justify-center">
-          <p className="text-sm text-gray-500">
-            Use your Supabase credentials to sign in.
-          </p>
+          {!showForgotPassword && !resetEmailSent && (
+            <button 
+              type="button"
+              onClick={() => setShowForgotPassword(true)}
+              className="text-sm text-blue-600 hover:text-blue-800 underline"
+            >
+              Forgot Password?
+            </button>
+          )}
         </CardFooter>
       </Card>
     </div>

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo  } from "react"
 import { Slider } from "@/components/ui/slider"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -27,6 +27,7 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
   // State for serving size - default to standard value
   const [servingSize, setServingSize] = useState(recipe.standard_serving_pax)
   const [inputValue, setInputValue] = useState(recipe.standard_serving_pax.toString())
+  const [forceUpdate, setForceUpdate] = useState(0)
   const sliderRef = useRef<HTMLDivElement>(null)
   const { textSize } = useTextSize()
   const { user } = useAuth()
@@ -66,7 +67,7 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
   }, [user?.role])
 
   // Use the cached inventory ingredients from React Query, filtered by location
-  const { data: inventoryIngredients = [] } = useIngredients(selectedLocationId)
+  const { data: inventoryIngredients = [], refetch: refetchIngredients } = useIngredients(selectedLocationId)
 
   // Update input when slider changes
   useEffect(() => {
@@ -98,8 +99,10 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
   }
 
   // Handle location change
-  const handleLocationChange = (locationId: string) => {
+  const handleLocationChange = async (locationId: string) => {
     setSelectedLocationId(parseInt(locationId))
+    // Immediately refetch ingredients for the new location
+    await refetchIngredients()
   }
 
   // Increment/decrement serving size
@@ -176,14 +179,18 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
   // Calculate ingredients directly in render function
   const ratio = servingSize / recipe.standard_serving_pax
 
-  // Calculate ingredients directly - no state updates
-  const calculatedIngredients =
-    recipe.ingredients?.map((ingredient) => {
+  // Calculate ingredients using useMemo to update when dependencies change
+  const calculatedIngredients = useMemo(() => {
+    const ratio = servingSize / recipe.standard_serving_pax
+    
+    return recipe.ingredients?.map((ingredient) => {
       const { value: originalValue, unit } = parseQuantity(ingredient.quantity)
       const calculatedValue = originalValue * ratio
 
-      // Find matching inventory ingredient
-      const inventoryItem = inventoryIngredients?.find?.((item) => item.id === ingredient.ingredient_id)
+      // Find matching inventory ingredient by name
+      const inventoryItem = inventoryIngredients?.find?.((item) => 
+        item.name === ingredient.name
+      )
 
       const inStock = inventoryItem ? inventoryItem.quantity : 0
       const isShortage = calculatedValue > inStock
@@ -201,6 +208,7 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
         excessAmount,
       }
     }) || []
+  }, [recipe.ingredients, servingSize, inventoryIngredients, selectedLocationId])
 
   // Count ingredients with shortages and available
   const shortageCount = calculatedIngredients.filter((ing) => ing.isShortage).length
@@ -392,7 +400,7 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
             <h3 id="calculated-ingredients-heading" className={`${textClasses.subheading} font-semibold mb-4`}>
               Calculated Ingredients
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-4" key={selectedLocationId}>
               {calculatedIngredients.map((ingredient) => (
                 <div
                   key={ingredient.id}
