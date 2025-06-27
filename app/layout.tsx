@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from "@/lib/auth-context"
 import { DataProvider } from "@/lib/context/data-context"
 import { QueryProvider } from "@/components/providers/query-provider"
-import { TextSizeProvider } from "@/lib/context/text-size-context"
+import { TextSizeProviderWrapper } from "@/components/providers/text-size-provider-wrapper"
 import { Header } from "@/components/layout/header"
 import { ClientHeader } from "@/components/layout/client-header"
 
@@ -29,10 +29,10 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             <DataProvider>
-              <TextSizeProvider>
+              <TextSizeProviderWrapper>
                 {children}
                 <Toaster />
-              </TextSizeProvider>
+              </TextSizeProviderWrapper>
             </DataProvider>
           </AuthProvider>
         </QueryProvider>

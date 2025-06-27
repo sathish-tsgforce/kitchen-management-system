@@ -22,6 +22,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/components/ui/use-toast"
+import { TextSizeControls } from "@/components/accessibility/text-size-controls"
+import { useTextSize } from "@/lib/context/text-size-context"
 
 export default function InventoryPage() {
   const { ingredients, deleteIngredient, refreshData } = useData()
@@ -34,6 +36,7 @@ export default function InventoryPage() {
   const { toast } = useToast()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const { user } = useAuth()
+  const { textSize } = useTextSize()
 
   // Get unique categories for filter dropdown
   const categories = ["all", ...new Set(ingredients.map((ingredient) => ingredient.category))].filter(Boolean)
@@ -204,29 +207,70 @@ export default function InventoryPage() {
     }
   }
 
+  // Helper function to get text size classes
+  const getTextSizeClasses = () => {
+    switch (textSize) {
+      case "large":
+        return {
+          label: "text-base",
+          button: "text-base",
+          tableHeader: "text-base",
+          tableCell: "text-base",
+          dialogTitle: "text-xl",
+          dialogDescription: "text-base",
+          badge: "text-sm",
+        }
+      case "x-large":
+        return {
+          label: "text-lg",
+          button: "text-lg",
+          tableHeader: "text-lg",
+          tableCell: "text-lg",
+          dialogTitle: "text-2xl",
+          dialogDescription: "text-lg",
+          badge: "text-base",
+        }
+      default:
+        return {
+          label: "text-sm",
+          button: "text-sm",
+          tableHeader: "text-sm",
+          tableCell: "text-sm",
+          dialogTitle: "text-lg",
+          dialogDescription: "text-sm",
+          badge: "text-xs",
+        }
+    }
+  }
+
+  const textClasses = getTextSizeClasses()
+
   return (
     <main className="container mx-auto px-4 py-8">
        <div className="mb-8 space-y-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-4xl font-bold text-gray-900">Inventory</h1>
-          <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing} className="ml-auto">
-            {isRefreshing ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Refreshing...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4" /> Refresh
-              </>
-            )}
-          </Button>
+          <h1 className={`font-bold text-gray-900 ${textSize === 'large' ? 'text-5xl' : textSize === 'x-large' ? 'text-6xl' : 'text-4xl'}`}>Inventory</h1>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing} className="ml-auto">
+              {isRefreshing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Refreshing...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" /> Refresh
+                </>
+              )}
+            </Button>
+            <TextSizeControls />
+          </div>
         </div>
-        <p className="text-xl text-gray-700">Manage Inventory Data</p>
+        <p className={`${textSize === 'large' ? 'text-2xl' : textSize === 'x-large' ? 'text-3xl' : 'text-xl'} text-gray-700`}>Manage Inventory Data</p>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-6 items-start md:items-end">
         <div className="w-full md:w-1/3">
-          <label htmlFor="search-inventory" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="search-inventory" className={`block font-medium text-gray-700 mb-1 ${textClasses.label}`}>
             Search Inventory
           </label>
           <Input
@@ -234,21 +278,21 @@ export default function InventoryPage() {
             placeholder="Search by any field..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
+            className={`w-full ${textClasses.tableCell}`}
           />
         </div>
 
         <div className="w-full md:w-1/4">
-          <label htmlFor="filter-category" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="filter-category" className={`block font-medium text-gray-700 mb-1 ${textClasses.label}`}>
             Filter by Category
           </label>
           <Select value={filterCategory} onValueChange={setFilterCategory}>
-            <SelectTrigger id="filter-category" className="w-full">
+            <SelectTrigger id="filter-category" className={`w-full ${textClasses.tableCell}`}>
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
               {categories.map((category) => (
-                <SelectItem key={category} value={category} className="cursor-pointer">
+                <SelectItem key={category} value={category} className={`cursor-pointer ${textClasses.tableCell}`}>
                   {category === "all" ? "All Categories" : category}
                 </SelectItem>
               ))}
@@ -260,27 +304,27 @@ export default function InventoryPage() {
           <Button
             variant={showLowQuantityOnly ? "default" : "outline"}
             onClick={toggleLowQuantityFilter}
-            className="w-full md:w-auto"
+            className={`w-full md:w-auto ${textClasses.button}`}
           >
             <Filter className="mr-2 h-5 w-5" />
             {showLowQuantityOnly ? "Show All" : "Low Quantity Only"}
           </Button>
 
-          <Button variant="outline" onClick={exportToCSV} className="w-full md:w-auto">
+          <Button variant="outline" onClick={exportToCSV} className={`w-full md:w-auto ${textClasses.button}`}>
             <Download className="mr-2 h-5 w-5" />
             Export to CSV
           </Button>
 
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="w-full md:w-auto bg-green-700 hover:bg-green-800">
+              <Button className={`w-full md:w-auto bg-green-700 hover:bg-green-800 ${textClasses.button}`}>
                 <Plus className="mr-2 h-5 w-5" />
                 Add New Ingredient
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-[450px] p-4 border-2 border-gray-200 rounded-lg shadow-lg">
               <DialogHeader className="pb-2 mb-1">
-                <DialogTitle className="text-lg font-semibold">Add New Ingredient</DialogTitle>
+                <DialogTitle className={`font-semibold ${textClasses.dialogTitle}`}>Add New Ingredient</DialogTitle>
               </DialogHeader>
               <InventoryForm />
             </DialogContent>
@@ -294,7 +338,7 @@ export default function InventoryPage() {
             <TableRow>
               <TableHead className="w-[250px]">
                 <button
-                  className="flex items-center font-semibold text-left"
+                  className={`flex items-center font-semibold text-left ${textClasses.tableHeader}`}
                   onClick={() => requestSort("name")}
                   aria-label="Sort by name"
                 >
@@ -303,7 +347,7 @@ export default function InventoryPage() {
               </TableHead>
               <TableHead>
                 <button
-                  className="flex items-center font-semibold text-left"
+                  className={`flex items-center font-semibold text-left ${textClasses.tableHeader}`}
                   onClick={() => requestSort("quantity")}
                   aria-label="Sort by quantity"
                 >
@@ -312,7 +356,7 @@ export default function InventoryPage() {
               </TableHead>
               <TableHead>
                 <button
-                  className="flex items-center font-semibold text-left"
+                  className={`flex items-center font-semibold text-left ${textClasses.tableHeader}`}
                   onClick={() => requestSort("threshold_quantity")}
                   aria-label="Sort by threshold quantity"
                 >
@@ -321,7 +365,7 @@ export default function InventoryPage() {
               </TableHead>
               <TableHead>
                 <button
-                  className="flex items-center font-semibold text-left"
+                  className={`flex items-center font-semibold text-left ${textClasses.tableHeader}`}
                   onClick={() => requestSort("price")}
                   aria-label="Sort by price"
                 >
@@ -330,7 +374,7 @@ export default function InventoryPage() {
               </TableHead>
               <TableHead>
                 <button
-                  className="flex items-center font-semibold text-left"
+                  className={`flex items-center font-semibold text-left ${textClasses.tableHeader}`}
                   onClick={() => requestSort("category")}
                   aria-label="Sort by category"
                 >
@@ -339,7 +383,7 @@ export default function InventoryPage() {
               </TableHead>
               <TableHead>
                 <button
-                  className="flex items-center font-semibold text-left"
+                  className={`flex items-center font-semibold text-left ${textClasses.tableHeader}`}
                   onClick={() => requestSort("location")}
                   aria-label="Sort by location"
                 >
@@ -348,42 +392,42 @@ export default function InventoryPage() {
               </TableHead>
               <TableHead>
                 <button
-                  className="flex items-center font-semibold text-left"
+                  className={`flex items-center font-semibold text-left ${textClasses.tableHeader}`}
                   onClick={() => requestSort("storage_type")}
                   aria-label="Sort by storage type"
                 >
                   Storage Type {getSortDirectionIcon("storage_type")}
                 </button>
               </TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className={`text-right ${textClasses.tableHeader}`}>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredIngredients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={8} className={`h-24 text-center ${textClasses.tableCell}`}>
                   {showLowQuantityOnly ? "No ingredients with low quantity found." : "No ingredients found."}
                 </TableCell>
               </TableRow>
             ) : (
               filteredIngredients.map((ingredient) => (
                 <TableRow key={ingredient.id}>
-                  <TableCell className="font-medium">{ingredient.name}</TableCell>
-                  <TableCell>
+                  <TableCell className={`font-medium ${textClasses.tableCell}`}>{ingredient.name}</TableCell>
+                  <TableCell className={textClasses.tableCell}>
                     {ingredient.quantity} {ingredient.unit}
                     {ingredient.quantity <= (ingredient.threshold_quantity || 10) && (
-                      <Badge variant="destructive" className="ml-2">
+                      <Badge variant="destructive" className={`ml-2 ${textClasses.badge}`}>
                         Low
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className={textClasses.tableCell}>
                     {ingredient.threshold_quantity || 10} {ingredient.unit}
                   </TableCell>
-                  <TableCell>${ingredient.price?.toFixed(2) || "N/A"}</TableCell>
-                  <TableCell>{ingredient.category || "Uncategorized"}</TableCell>
-                  <TableCell>{ingredient.location?.name || "Not specified"}</TableCell>
-                  <TableCell>{ingredient.storage_type || "Standard"}</TableCell>
+                  <TableCell className={textClasses.tableCell}>${ingredient.price?.toFixed(2) || "N/A"}</TableCell>
+                  <TableCell className={textClasses.tableCell}>{ingredient.category || "Uncategorized"}</TableCell>
+                  <TableCell className={textClasses.tableCell}>{ingredient.location?.name || "Not specified"}</TableCell>
+                  <TableCell className={textClasses.tableCell}>{ingredient.storage_type || "Standard"}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Dialog>
@@ -394,7 +438,7 @@ export default function InventoryPage() {
                         </DialogTrigger>
                         <DialogContent className="max-w-[450px] p-4 border-2 border-gray-200 rounded-lg shadow-lg">
                           <DialogHeader className="pb-2 mb-1">
-                            <DialogTitle className="text-lg font-semibold">Edit Ingredient</DialogTitle>
+                            <DialogTitle className={`font-semibold ${textClasses.dialogTitle}`}>Edit Ingredient</DialogTitle>
                           </DialogHeader>
                           <InventoryForm ingredient={ingredient} />
                         </DialogContent>
@@ -421,14 +465,14 @@ export default function InventoryPage() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className={textClasses.dialogTitle}>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription className={textClasses.dialogDescription}>
               This will permanently delete this ingredient from your inventory. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogCancel className={textClasses.button}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className={`bg-red-600 hover:bg-red-700 ${textClasses.button}`}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -52,6 +52,8 @@ import { toast } from "@/components/ui/use-toast"
 import type { Order } from "@/lib/types"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { TextSizeControls } from "@/components/accessibility/text-size-controls"
+import { useTextSize } from "@/lib/context/text-size-context"
 
 // Create a separate component for the action buttons to prevent re-renders
 const OrderActions = memo(
@@ -575,6 +577,8 @@ export default function OrdersPage() {
 
   // Focus management refs
   const previousFocusRef = useRef<HTMLElement | null>(null)
+
+  const { textSize } = useTextSize();
 
   useEffect(() => {
     isMounted.current = true
@@ -1467,10 +1471,10 @@ export default function OrdersPage() {
 
   return (
     <main className="container mx-auto px-4 py-8">
-      <div className="mb-8 space-y-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-4xl font-bold text-gray-900">Orders</h1>
-          <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing} className="ml-auto">
+      <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <h1 className={`font-bold text-gray-900 ${textSize === 'large' ? 'text-5xl' : textSize === 'x-large' ? 'text-6xl' : 'text-4xl'}`}>Orders</h1>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
             {isRefreshing ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Refreshing...
@@ -1481,8 +1485,8 @@ export default function OrdersPage() {
               </>
             )}
           </Button>
+          <TextSizeControls />
         </div>
-        <p className="text-xl text-gray-700">Manage customer orders</p>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-6 items-start md:items-end">
