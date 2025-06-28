@@ -12,7 +12,6 @@ import { useIngredients } from "@/lib/hooks/use-ingredients"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useTextSize } from "@/lib/context/text-size-context"
-import { TextSizeControls } from "@/components/accessibility/text-size-controls"
 import { Button } from "@/components/ui/button"
 import type { Recipe } from "@/lib/types"
 
@@ -176,7 +175,6 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
         <h2 id="calculator-title" className={`${textClasses.title} font-bold`}>
           Recipe Calculator
         </h2>
-        <TextSizeControls />
       </div>
 
       <Card className="w-full">
@@ -184,7 +182,7 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
           <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <span className={textClasses.heading}>Serving Size Adjustment</span>
             <Badge
-              variant={shortageCount > 0 ? "destructive" : "success"}
+              variant={shortageCount > 0 ? "destructive" : "default"}
               className="ml-0 mt-2 sm:mt-0 sm:ml-2 inline-flex self-start sm:self-auto"
             >
               {shortageCount > 0
@@ -205,8 +203,8 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
                 </AlertDescription>
               </Alert>
             ) : (
-              <Alert variant="default" className="bg-green-50 border-green-200 text-green-800" role="status">
-                <CheckCircle className="h-5 w-5 text-green-600" aria-hidden="true" />
+              <Alert variant="default" className="bg-green-50 border-green-300 text-green-900" role="status">
+                <CheckCircle className="h-5 w-5 text-green-700" aria-hidden="true" />
                 <AlertTitle className={textClasses.subheading}>All Ingredients Available</AlertTitle>
                 <AlertDescription className={textClasses.body}>
                   You have enough of all ingredients in your inventory for this recipe.
@@ -321,7 +319,7 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
                 <div
                   key={ingredient.id}
                   className={`p-4 rounded-lg border ${
-                    ingredient.isShortage ? "border-red-500 bg-red-50" : "border-green-500 bg-green-50"
+                    ingredient.isShortage ? "border-red-500 bg-red-50" : "border-green-600 bg-green-50"
                   }`}
                   role="listitem"
                 >
@@ -331,14 +329,14 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
                     <div className="grid grid-cols-2 sm:grid-cols-2 gap-x-4 gap-y-1">
                       <div className={`font-semibold ${textClasses.body}`}>Needed:</div>
                       <div
-                        className={`${ingredient.isShortage ? "text-red-700 font-bold" : "text-green-700 font-bold"} ${textClasses.body}`}
+                        className={`${ingredient.isShortage ? "text-red-700 font-bold" : "text-green-800 font-bold"} ${textClasses.body}`}
                       >
                         {ingredient.calculatedQuantity} {ingredient.unit}
                       </div>
 
                       <div className={`font-semibold ${textClasses.body}`}>Available:</div>
                       <div
-                        className={`${ingredient.isShortage ? "text-red-700" : "text-green-700"} ${textClasses.body}`}
+                        className={`${ingredient.isShortage ? "text-red-700" : "text-green-800"} ${textClasses.body}`}
                       >
                         {ingredient.inStock} {ingredient.unit}
                       </div>
@@ -352,8 +350,8 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
                         </>
                       ) : (
                         <>
-                          <div className={`font-semibold text-green-700 ${textClasses.body}`}>Excess:</div>
-                          <div className={`text-green-700 ${textClasses.body}`}>{ingredient.excessAmount}</div>
+                          <div className={`font-semibold text-green-800 ${textClasses.body}`}>Excess:</div>
+                          <div className={`text-green-800 ${textClasses.body}`}>{ingredient.excessAmount}</div>
                         </>
                       )}
                     </div>

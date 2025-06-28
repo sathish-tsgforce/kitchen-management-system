@@ -100,7 +100,7 @@ export default function InventoryPage() {
     }
 
     return sortConfig.direction === "ascending" ? (
-      <ArrowUpDown className="ml-2 h-4 w-4 text-green-600" />
+      <ArrowUpDown className="ml-2 h-4 w-4 text-green-700" />
     ) : (
       <ArrowUpDown className="ml-2 h-4 w-4 text-red-600" />
     )
@@ -317,7 +317,7 @@ export default function InventoryPage() {
 
           <Dialog>
             <DialogTrigger asChild>
-              <Button className={`w-full md:w-auto bg-green-700 hover:bg-green-800 ${textClasses.button}`}>
+              <Button className={`w-full md:w-auto bg-green-800 hover:bg-green-900 ${textClasses.button}`}>
                 <Plus className="mr-2 h-5 w-5" />
                 Add New Ingredient
               </Button>

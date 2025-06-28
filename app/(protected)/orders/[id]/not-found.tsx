@@ -22,8 +22,9 @@ export default function OrderNotFound() {
         </AlertDescription>
       </Alert>
 
-      <Button href="/orders" className="bg-green-700 hover:bg-green-800 text-white">
-        Return to Orders
+      <Button href="/orders" className="bg-green-800 hover:bg-green-900 text-white">
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to Orders
       </Button>
     </main>
   )

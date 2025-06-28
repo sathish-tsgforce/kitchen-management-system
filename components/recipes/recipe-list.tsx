@@ -102,7 +102,7 @@ export default function RecipeList() {
         </p>
         <Link
           href="/recipes/new"
-          className={`bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-lg font-medium inline-block focus:outline-none focus:ring-4 focus:ring-green-300 ${textClasses.button}`}
+          className={`bg-green-800 hover:bg-green-900 text-white px-6 py-3 rounded-lg font-medium inline-block focus:outline-none focus:ring-4 focus:ring-green-300 ${textClasses.button}`}
         >
           Create New Recipe
         </Link>
@@ -113,7 +113,7 @@ export default function RecipeList() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {filteredRecipes.map((recipe) => (
-        <Card key={recipe.id} className="border-2 border-gray-200 hover:border-green-500 transition-colors">
+        <Card key={recipe.id} className="border-2 border-gray-200 hover:border-green-600 transition-colors">
           <CardContent className="p-6">
             <h3 className={`font-bold text-gray-900 mb-2 ${textClasses.cardTitle}`}>{recipe.name}</h3>
             <p className={`text-gray-700 mb-4 ${textClasses.cardDescription}`}>
@@ -126,7 +126,7 @@ export default function RecipeList() {
           <CardFooter className="p-6 pt-0 flex justify-between">
             <Link
               href={`/recipes/${recipe.id}`}
-              className={`text-green-700 hover:text-green-800 font-medium flex items-center focus:outline-none focus:underline ${textClasses.cardLink}`}
+              className={`text-green-800 hover:text-green-900 font-medium flex items-center focus:outline-none focus:underline ${textClasses.cardLink}`}
               aria-label={`View ${recipe.name} recipe details`}
             >
               View Details

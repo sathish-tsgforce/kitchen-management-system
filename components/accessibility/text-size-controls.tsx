@@ -9,18 +9,18 @@ export function TextSizeControls() {
   const { increaseTextSize, decreaseTextSize, resetTextSize } = useTextSize()
 
   return (
-    <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow-sm border border-gray-200">
+    <div className="flex items-center gap-2">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="outline"
-              size="sm"
+              size="default"
               onClick={decreaseTextSize}
               aria-label="Decrease text size"
-              className="h-8 w-8 p-0"
+              className="h-10 w-10 p-0 flex items-center justify-center"
             >
-              <ZoomOut className="h-4 w-4" />
+              <ZoomOut className="h-5 w-5" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>
@@ -32,12 +32,12 @@ export function TextSizeControls() {
           <TooltipTrigger asChild>
             <Button
               variant="outline"
-              size="sm"
+              size="default"
               onClick={increaseTextSize}
               aria-label="Increase text size"
-              className="h-8 w-8 p-0"
+              className="h-10 w-10 p-0 flex items-center justify-center"
             >
-              <ZoomIn className="h-4 w-4" />
+              <ZoomIn className="h-5 w-5" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>
@@ -49,12 +49,12 @@ export function TextSizeControls() {
           <TooltipTrigger asChild>
             <Button
               variant="outline"
-              size="sm"
+              size="default"
               onClick={resetTextSize}
               aria-label="Reset text size"
-              className="h-8 w-8 p-0"
+              className="h-10 w-10 p-0 flex items-center justify-center"
             >
-              <RotateCcw className="h-4 w-4" />
+              <RotateCcw className="h-5 w-5" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>

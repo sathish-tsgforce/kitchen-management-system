@@ -18,7 +18,7 @@ export default function RecipesPage() {
         <h1 className={`font-bold text-gray-900 ${textSize === 'large' ? 'text-5xl' : textSize === 'x-large' ? 'text-6xl' : 'text-4xl'}`}>Recipes</h1>
         <div className="flex gap-2">
           <Link href="/recipes/new">
-            <Button className="bg-green-700 hover:bg-green-800 text-white">
+            <Button className="bg-green-800 hover:bg-green-900 text-white">
               <Plus className="mr-2 h-5 w-5" />
               Create New Recipe
             </Button>

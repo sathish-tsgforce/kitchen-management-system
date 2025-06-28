@@ -8,6 +8,7 @@ import { useUsers } from "@/lib/hooks/use-users"
 import { Loader2, Plus, RefreshCw } from "lucide-react"
 import { ApiDebugPanel } from "@/components/debug/api-debug-panel"
 import { TextSizeControls } from "@/components/accessibility/text-size-controls"
+import { useTextSize } from "@/lib/context/text-size-context"
 
 export default function UsersPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -15,6 +16,7 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState(null)
   const { users, roles, locations, isLoading, error, debugInfo, createUser, updateUser, deleteUser, refreshUsers, refreshRoles, refreshLocations } =
     useUsers()
+  const { textSize } = useTextSize()
 
   const handleCreateUser = async (userData) => {
     setIsSubmitting(true)
