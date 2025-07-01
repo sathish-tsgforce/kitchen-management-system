@@ -87,7 +87,7 @@ export function LocationTable() {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Storage Locations</CardTitle>
         <div className="flex space-x-2">
-          <Button className="bg-green-700 hover:bg-green-800 text-white" onClick={() => setIsAddDialogOpen(true)}>
+          <Button className="bg-green-800 hover:bg-green-900 text-white" onClick={() => setIsAddDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Add Location
           </Button>
@@ -142,7 +142,7 @@ export function LocationTable() {
                     <TableCell>{location.address || "—"}</TableCell>
                     <TableCell>
                       {location.is_active ? (
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        <Badge variant="outline" className="bg-green-50 text-green-800 border-green-300">
                           Active
                         </Badge>
                       ) : (

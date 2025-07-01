@@ -7,6 +7,8 @@ import { UserForm } from "@/components/users/user-form"
 import { useUsers } from "@/lib/hooks/use-users"
 import { Loader2, Plus, RefreshCw } from "lucide-react"
 import { ApiDebugPanel } from "@/components/debug/api-debug-panel"
+import { TextSizeControls } from "@/components/accessibility/text-size-controls"
+import { useTextSize } from "@/lib/context/text-size-context"
 
 export default function UsersPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -14,6 +16,7 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState(null)
   const { users, roles, locations, isLoading, error, debugInfo, createUser, updateUser, deleteUser, refreshUsers, refreshRoles, refreshLocations } =
     useUsers()
+  const { textSize } = useTextSize()
 
   const handleCreateUser = async (userData) => {
     setIsSubmitting(true)
@@ -67,12 +70,13 @@ export default function UsersPage() {
   return (
     <div className="container mx-auto py-6">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">User Management</h1>
+        <h1 className={`font-bold ${textSize === 'large' ? 'text-4xl' : textSize === 'x-large' ? 'text-5xl' : 'text-3xl'}`}>User Management</h1>
         <div className="flex space-x-2">
           <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
+          <TextSizeControls />
         </div>
       </div>
 

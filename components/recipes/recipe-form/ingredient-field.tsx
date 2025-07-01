@@ -196,7 +196,7 @@ export default function IngredientField({
                           )}
                         >
                           <div className="flex items-center">
-                            {ingredient.ingredient_id === item.id && <Check className="mr-2 h-4 w-4 text-green-500" />}
+                            {ingredient.ingredient_id === item.id && <Check className="mr-2 h-4 w-4 text-green-600" />}
                             <span>{item.name}</span>
                             {isAlreadySelected && <span className="ml-2 text-xs text-red-500">Already added</span>}
                           </div>

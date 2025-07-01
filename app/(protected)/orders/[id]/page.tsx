@@ -252,7 +252,7 @@ const OrderPage = ({ params }: OrderPageProps) => {
       case "in_progress":
         return <Badge className="bg-purple-600 text-lg py-1 px-3">In Progress</Badge>
       case "completed":
-        return <Badge className="bg-green-600 text-lg py-1 px-3">Completed</Badge>
+        return <Badge className="bg-green-800 text-lg py-1 px-3">Completed</Badge>
       case "cancelled":
         return <Badge className="bg-red-600 text-lg py-1 px-3">Cancelled</Badge>
       default:
@@ -506,8 +506,9 @@ const OrderPage = ({ params }: OrderPageProps) => {
           </AlertDescription>
         </Alert>
 
-        <Button onClick={() => router.push("/orders")} className="bg-green-700 hover:bg-green-800 text-white mr-4">
-          Return to Orders
+        <Button onClick={() => router.push("/orders")} className="bg-green-800 hover:bg-green-900 text-white mr-4">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Orders
         </Button>
 
         <Button
@@ -610,7 +611,7 @@ const OrderPage = ({ params }: OrderPageProps) => {
           {order.status === "in_progress" && (
             <>
               <Button
-                className="bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-lg text-lg font-medium h-auto"
+                className="bg-green-800 hover:bg-green-900 text-white px-6 py-3 rounded-lg text-lg font-medium h-auto"
                 aria-label={`Complete order #${order.id}`}
                 onClick={() => handleAction("complete")}
                 disabled={isProcessing}

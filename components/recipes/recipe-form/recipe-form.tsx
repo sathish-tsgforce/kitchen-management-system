@@ -375,8 +375,8 @@ export default function RecipeForm({
           {recipeIngredients.length === 0 ? (
             <div className="text-center p-8 border-2 border-dashed border-gray-300 rounded-lg mb-6">
               <p className="text-lg text-gray-500 mb-4">No ingredients added yet</p>
-              <Button onClick={addIngredient} className="bg-green-700 hover:bg-green-800 text-white">
-                <Plus className="mr-2 h-5 w-5" />
+              <Button onClick={addIngredient} className="bg-green-800 hover:bg-green-900 text-white">
+                <Plus className="mr-2 h-4 w-4" />
                 Add First Ingredient
               </Button>
             </div>
@@ -397,8 +397,8 @@ export default function RecipeForm({
                 ))}
               </div>
 
-              <Button onClick={addIngredient} className="mb-8 bg-green-700 hover:bg-green-800 text-white">
-                <Plus className="mr-2 h-5 w-5" />
+              <Button onClick={addIngredient} className="mb-8 bg-green-800 hover:bg-green-900 text-white">
+                <Plus className="mr-2 h-4 w-4" />
                 Add Another Ingredient
               </Button>
             </>
@@ -409,8 +409,8 @@ export default function RecipeForm({
           {recipeSteps.length === 0 ? (
             <div className="text-center p-8 border-2 border-dashed border-gray-300 rounded-lg mb-6">
               <p className="text-lg text-gray-500 mb-4">No steps added yet</p>
-              <Button onClick={addStep} className="bg-green-700 hover:bg-green-800 text-white">
-                <Plus className="mr-2 h-5 w-5" />
+              <Button onClick={addStep} className="bg-green-800 hover:bg-green-900 text-white">
+                <Plus className="mr-2 h-4 w-4" />
                 Add First Step
               </Button>
             </div>
@@ -422,8 +422,8 @@ export default function RecipeForm({
                 ))}
               </div>
 
-              <Button onClick={addStep} className="mb-8 bg-green-700 hover:bg-green-800 text-white">
-                <Plus className="mr-2 h-5 w-5" />
+              <Button onClick={addStep} className="mb-8 bg-green-800 hover:bg-green-900 text-white">
+                <Plus className="mr-2 h-4 w-4" />
                 Add Another Step
               </Button>
             </>
@@ -432,7 +432,7 @@ export default function RecipeForm({
           <div className="flex justify-end">
             <Button
               type="submit"
-              className="bg-green-700 hover:bg-green-800 text-white px-6 py-3 text-lg font-medium h-auto"
+              className="bg-green-800 hover:bg-green-900 text-white px-6 py-3 text-lg font-medium h-auto"
               disabled={isSubmitting}
             >
               <Save className="mr-2 h-5 w-5" />

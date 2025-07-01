@@ -100,7 +100,7 @@ export async function getOrderStatusColor(status: string): Promise<string> {
     case "in_progress":
       return "bg-purple-600"
     case "completed":
-      return "bg-green-600"
+      return "bg-green-800"
     case "cancelled":
       return "bg-red-600"
     default:

@@ -316,7 +316,7 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
               Cancel
             </Button>
           </DialogClose>
-          <Button type="submit" className="bg-green-700 hover:bg-green-800" size="sm" disabled={isSubmitting}>
+          <Button type="submit" className="bg-green-800 hover:bg-green-900" size="sm" disabled={isSubmitting}>
             {isSubmitting
               ? ingredient
                 ? "Updating..."
