@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Pencil, Trash2, RefreshCw, UserPlus } from "lucide-react"
+import { Pencil, Trash2, RefreshCw, UserPlus, Plus } from "lucide-react"
 import { UserForm } from "@/components/users/user-form"
 import { useUsers } from "@/lib/hooks/use-users"
 import type { User } from "@/lib/types/user"
@@ -97,8 +97,8 @@ export function UserTable() {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Users</CardTitle>
         <div className="flex space-x-2">
-          <Button className="bg-green-700 hover:bg-green-800 text-white" onClick={() => setIsAddDialogOpen(true)}>
-            <UserPlus className="h-4 w-4 mr-2" />
+          <Button className="bg-green-800 hover:bg-green-900 text-white" onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
             Add User
           </Button>
         </div>

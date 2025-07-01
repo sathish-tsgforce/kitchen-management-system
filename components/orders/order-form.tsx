@@ -310,7 +310,7 @@ export default function OrderForm() {
               <Button
                 type="button"
                 onClick={addItem}
-                className="w-full bg-green-700 hover:bg-green-800 text-lg p-3 h-auto"
+                className="w-full bg-green-800 hover:bg-green-900 text-lg p-3 h-auto"
                 disabled={!selectedMenuItem}
               >
                 <Plus className="mr-2 h-5 w-5" />
@@ -389,7 +389,7 @@ export default function OrderForm() {
         <DialogClose asChild>
           <Button
             type="submit"
-            className="bg-green-700 hover:bg-green-800 text-lg p-3 h-auto"
+            className="bg-green-800 hover:bg-green-900 text-lg p-3 h-auto"
             disabled={
               formData.items.length === 0 || !formData.customer_name || !formData.delivery_address || isSubmitting
             }

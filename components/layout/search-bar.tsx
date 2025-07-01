@@ -50,12 +50,12 @@ export default function SearchBar() {
             id="recipe-search"
             type="search"
             placeholder="Search recipes by name..."
-            className="w-full text-lg p-4 h-auto rounded-r-none border-2 border-r-0 border-gray-300 focus-visible:ring-green-500"
+            className="w-full text-lg p-4 h-auto rounded-r-none border-2 border-r-0 border-gray-300 focus-visible:ring-green-600"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             aria-label="Search recipes"
           />
-          <div className="bg-green-700 hover:bg-green-800 rounded-l-none px-6 flex items-center">
+          <div className="bg-green-800 hover:bg-green-900 rounded-l-none px-6 flex items-center">
             <Search className="h-5 w-5 text-white" />
             <span className="sr-only">Search</span>
           </div>

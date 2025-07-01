@@ -291,7 +291,7 @@ export default function EditOrderForm({ order, onClose }: EditOrderFormProps) {
               type="button"
               onClick={addItemToOrder}
               disabled={!selectedMenuItem}
-              className="bg-green-700 hover:bg-green-800 text-base"
+              className="bg-green-800 hover:bg-green-900 text-base"
             >
               Add Item
             </Button>
@@ -383,7 +383,7 @@ export default function EditOrderForm({ order, onClose }: EditOrderFormProps) {
         </Button>
         <Button
           type="submit"
-          className="bg-green-700 hover:bg-green-800 text-base"
+          className="bg-green-800 hover:bg-green-900 text-base"
           disabled={isSubmitting || formData.items.length === 0}
         >
           {isSubmitting ? "Saving..." : "Save Changes"}

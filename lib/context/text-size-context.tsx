@@ -13,16 +13,33 @@ const TextSizeContext = createContext<TextSizeContextType | undefined>(undefined
 
 const TEXT_SIZES = ["normal", "large", "x-large"]
 
-export function TextSizeProvider({ children }: { children: ReactNode }) {
-  const [textSize, setTextSize] = useState<string>("normal")
+interface TextSizeProviderProps {
+  children: ReactNode
+  userRole?: string
+}
 
-  // Load saved preference from localStorage on mount
+export function TextSizeProvider({ children, userRole }: TextSizeProviderProps) {
+  // Set default text size based on user role
+  const getDefaultTextSize = () => {
+    if (userRole === "Admin") return "normal"
+    if (userRole === "Chef") return "x-large"
+    return "normal" // Default for other roles
+  }
+
+  const [textSize, setTextSize] = useState<string>(getDefaultTextSize())
+
+  // Load saved preference from localStorage on mount, but respect role-based defaults
   useEffect(() => {
     const savedSize = localStorage.getItem("recipe-text-size")
     if (savedSize && TEXT_SIZES.includes(savedSize)) {
       setTextSize(savedSize)
+    } else {
+      // If no saved preference, use role-based default
+      const defaultSize = getDefaultTextSize()
+      setTextSize(defaultSize)
+      localStorage.setItem("recipe-text-size", defaultSize)
     }
-  }, [])
+  }, [userRole])
 
   // Save preference to localStorage when it changes
   useEffect(() => {
@@ -44,7 +61,7 @@ export function TextSizeProvider({ children }: { children: ReactNode }) {
   }
 
   const resetTextSize = () => {
-    setTextSize("normal")
+    setTextSize(getDefaultTextSize())
   }
 
   return (

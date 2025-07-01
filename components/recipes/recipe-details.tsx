@@ -172,7 +172,7 @@ export default function RecipeDetails({ recipeId }: RecipeDetailsProps) {
                 <Button
                   asChild
                   variant="outline"
-                  className={`${textClasses.button} h-auto bg-green-50 border-green-600 text-green-700 hover:bg-green-100 hover:text-green-800 focus:ring-2 focus:ring-green-500 focus:ring-offset-2`}
+                  className={`${textClasses.button} h-auto bg-green-50 border-green-700 text-green-800 hover:bg-green-100 hover:text-green-900 focus:ring-2 focus:ring-green-600 focus:ring-offset-2`}
                 >
                   <Link href={`/recipes/${recipe.id}/calculator`}>
                     <Calculator className={`mr-2 ${textClasses.iconSize}`} />
