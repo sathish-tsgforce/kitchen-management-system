@@ -104,7 +104,7 @@ export default function RecipeList() {
           href="/recipes/new"
           className={`bg-green-800 hover:bg-green-900 text-white px-6 py-3 rounded-lg font-medium inline-block focus:outline-none focus:ring-4 focus:ring-green-300 ${textClasses.button}`}
         >
-          Create New Recipe
+          Add New Recipe
         </Link>
       </div>
     )

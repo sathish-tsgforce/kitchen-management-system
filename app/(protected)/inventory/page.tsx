@@ -249,23 +249,25 @@ export default function InventoryPage() {
     <main className="container mx-auto px-4 py-8">
        <div className="mb-8 space-y-4">
         <div className="flex justify-between items-center">
-          <h1 className={`font-bold text-gray-900 ${textSize === 'large' ? 'text-5xl' : textSize === 'x-large' ? 'text-6xl' : 'text-4xl'}`}>Inventory</h1>
+          <h1 className={`font-bold text-gray-900 ${textSize === 'large' ? 'text-4xl' : textSize === 'x-large' ? 'text-5xl' : 'text-3xl'}`}>Inventory</h1>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing} className="ml-auto">
-              {isRefreshing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Refreshing...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4" /> Refresh
-                </>
-              )}
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className={`w-full md:w-auto bg-green-800 hover:bg-green-900 ${textClasses.button}`}>
+                  <Plus className="mr-2 h-5 w-5" />
+                  Add New Ingredient
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-[450px] p-4 border-2 border-gray-200 rounded-lg shadow-lg">
+                <DialogHeader className="pb-2 mb-1">
+                  <DialogTitle className={`font-semibold ${textClasses.dialogTitle}`}>Add New Ingredient</DialogTitle>
+                </DialogHeader>
+                <InventoryForm />
+              </DialogContent>
+             </Dialog>
             <TextSizeControls />
           </div>
         </div>
-        <p className={`${textSize === 'large' ? 'text-2xl' : textSize === 'x-large' ? 'text-3xl' : 'text-xl'} text-gray-700`}>Manage Inventory Data</p>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-6 items-start md:items-end">
@@ -315,20 +317,7 @@ export default function InventoryPage() {
             Export to CSV
           </Button>
 
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className={`w-full md:w-auto bg-green-800 hover:bg-green-900 ${textClasses.button}`}>
-                <Plus className="mr-2 h-5 w-5" />
-                Add New Ingredient
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-[450px] p-4 border-2 border-gray-200 rounded-lg shadow-lg">
-              <DialogHeader className="pb-2 mb-1">
-                <DialogTitle className={`font-semibold ${textClasses.dialogTitle}`}>Add New Ingredient</DialogTitle>
-              </DialogHeader>
-              <InventoryForm />
-            </DialogContent>
-          </Dialog>
+
         </div>
       </div>
 

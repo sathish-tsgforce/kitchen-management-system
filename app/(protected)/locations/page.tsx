@@ -70,9 +70,9 @@ export default function LocationsPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className={`font-bold ${textSize === 'large' ? 'text-4xl' : textSize === 'x-large' ? 'text-5xl' : 'text-3xl'}`}>Locations</h1>
         <div className="flex space-x-2">
-          <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
+          <Button className="bg-green-800 hover:bg-green-900 text-white" onClick={() => setIsFormOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Location
           </Button>
           <TextSizeControls />
         </div>

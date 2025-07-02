@@ -20,7 +20,7 @@ export default function RecipesPage() {
           <Link href="/recipes/new">
             <Button className="bg-green-800 hover:bg-green-900 text-white">
               <Plus className="mr-2 h-5 w-5" />
-              Create New Recipe
+              Add New Recipe
             </Button>
           </Link>
           <TextSizeControls />

@@ -31,12 +31,7 @@ export function MainNav() {
       active: pathname === "/locations",
       roles: ["Admin"] // Admin only
     },
-    {
-      href: "/orders",
-      label: "Orders",
-      active: pathname === "/orders" || pathname.startsWith("/orders/"),
-      roles: ["Admin", "Chef", "Server"] // Available to all roles
-    },
+
     {
       href: "/menu",
       label: "Menu",

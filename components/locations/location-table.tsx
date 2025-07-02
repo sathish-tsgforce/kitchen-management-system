@@ -15,13 +15,15 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Pencil, Trash2, RefreshCw, Plus } from "lucide-react"
+import { Edit, Trash2, RefreshCw, Plus } from "lucide-react"
 import { LocationForm } from "@/components/locations/location-form"
 import { useLocations } from "@/lib/hooks/use-locations"
+import { useTextSize } from "@/lib/context/text-size-context"
 import type { Location } from "@/lib/api/locations"
 
 export function LocationTable() {
   const { locations, isLoading, error, createLocation, updateLocation, deleteLocation, refreshLocations } = useLocations()
+  const { textSize } = useTextSize()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -82,18 +84,31 @@ export function LocationTable() {
     refreshLocations()
   }
 
+  // Helper function to get text size classes
+  const getTextSizeClasses = () => {
+    switch (textSize) {
+      case "large":
+        return {
+          tableHeader: "text-base",
+          tableCell: "text-base",
+        }
+      case "x-large":
+        return {
+          tableHeader: "text-lg",
+          tableCell: "text-lg",
+        }
+      default:
+        return {
+          tableHeader: "text-sm",
+          tableCell: "text-sm",
+        }
+    }
+  }
+
+  const textClasses = getTextSizeClasses()
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Storage Locations</CardTitle>
-        <div className="flex space-x-2">
-          <Button className="bg-green-800 hover:bg-green-900 text-white" onClick={() => setIsAddDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Location
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
+    <div className="flex flex-col h-full">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
             <p className="font-medium">Error</p>
@@ -105,16 +120,16 @@ export function LocationTable() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Address</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className={textClasses.tableHeader}>Name</TableHead>
+                <TableHead className={textClasses.tableHeader}>Address</TableHead>
+                <TableHead className={textClasses.tableHeader}>Status</TableHead>
+                <TableHead className={`text-right ${textClasses.tableHeader}`}>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-6">
+                  <TableCell colSpan={4} className={`text-center py-6 ${textClasses.tableCell}`}>
                     <div className="flex justify-center items-center">
                       <RefreshCw className="h-5 w-5 animate-spin mr-2" />
                       Loading locations...
@@ -123,7 +138,7 @@ export function LocationTable() {
                 </TableRow>
               ) : locations.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-6">
+                  <TableCell colSpan={4} className={`text-center py-6 ${textClasses.tableCell}`}>
                     {error ? (
                       <div>
                         <p>Error loading locations.</p>
@@ -138,9 +153,9 @@ export function LocationTable() {
               ) : (
                 locations.map((location) => (
                   <TableRow key={location.id}>
-                    <TableCell className="font-medium">{location.name}</TableCell>
-                    <TableCell>{location.address || "—"}</TableCell>
-                    <TableCell>
+                    <TableCell className={`font-medium ${textClasses.tableCell}`}>{location.name}</TableCell>
+                    <TableCell className={textClasses.tableCell}>{location.address || "—"}</TableCell>
+                    <TableCell className={textClasses.tableCell}>
                       {location.is_active ? (
                         <Badge variant="outline" className="bg-green-50 text-green-800 border-green-300">
                           Active
@@ -153,12 +168,12 @@ export function LocationTable() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(location)}>
-                          <Pencil className="h-4 w-4" />
+                        <Button variant="outline" size="icon" onClick={() => handleEdit(location)}>
+                          <Edit className="h-4 w-4" />
                           <span className="sr-only">Edit</span>
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(location)}>
-                          <Trash2 className="h-4 w-4 text-red-500" />
+                        <Button variant="destructive" size="icon" onClick={() => handleDelete(location)}>
+                          <Trash2 className="h-4 w-4" />
                           <span className="sr-only">Delete</span>
                         </Button>
                       </div>
@@ -169,7 +184,7 @@ export function LocationTable() {
             </TableBody>
           </Table>
         </div>
-      </CardContent>
+     
 
       {/* Add Location Dialog */}
       <LocationForm
@@ -214,6 +229,6 @@ export function LocationTable() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Card>
+   </div>
   )
 }

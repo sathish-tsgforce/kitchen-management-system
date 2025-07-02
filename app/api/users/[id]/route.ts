@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server"
 import { supabase, supabaseAdmin } from "@/lib/supabase"
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params
+    const { id } = await params
     console.log(`[API] GET /api/users/${id}: Fetching user`)
 
     // Get user from database with role and location
@@ -116,7 +116,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
       })
     }
   } catch (error: any) {
-    console.error(`[API] GET /api/users/${params.id}: Unhandled exception:`, {
+    const { id } = await params
+    console.error(`[API] GET /api/users/${id}: Unhandled exception:`, {
       message: error.message,
       stack: error.stack,
     })
@@ -132,9 +133,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params
+    const { id } = await params
     const userData = await request.json()
     console.log(`[API] PATCH /api/users/${id}: Updating user:`, {
       ...userData,
@@ -230,7 +231,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     // Get updated user data
     return await GET(request, { params })
   } catch (error: any) {
-    console.error(`[API] PATCH /api/users/${params.id}: Unhandled exception:`, {
+    const { id } = await params
+    console.error(`[API] PATCH /api/users/${id}: Unhandled exception:`, {
       message: error.message,
       stack: error.stack,
     })
@@ -246,9 +248,9 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params
+    const { id } = await params
     console.log(`[API] DELETE /api/users/${id}: Deleting user`)
 
     // Delete user from database
@@ -300,7 +302,8 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     console.log(`[API] DELETE /api/users/${id}: Successfully deleted user`)
     return NextResponse.json({ success: true })
   } catch (error: any) {
-    console.error(`[API] DELETE /api/users/${params.id}: Unhandled exception:`, {
+    const { id } = await params
+    console.error(`[API] DELETE /api/users/${id}: Unhandled exception:`, {
       message: error.message,
       stack: error.stack,
     })
