@@ -82,6 +82,25 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
     })
   }
 
+  const formatIngredientName = (name: string) => {
+    return name
+      .trim() // Remove extra spaces at the end
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ')
+  }
+
+  const handleNameBlur = () => {
+    const formattedName = formatIngredientName(formData.name)
+    if (formattedName !== formData.name) {
+      setFormData({
+        ...formData,
+        name: formattedName
+      })
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -161,6 +180,7 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
               id="name"
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
+              onBlur={handleNameBlur}
               className="h-8"
               required
             />

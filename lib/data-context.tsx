@@ -57,7 +57,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setLoading(true)
     setError(null)
     try {
-      await Promise.all([fetchIngredients(), fetchOrders(), fetchMenuItems(), fetchRecipes()])
+      await Promise.all([fetchIngredients(), fetchMenuItems(), fetchRecipes()])
     } catch (err) {
       setError("Failed to load data")
       console.error(err)
@@ -80,47 +80,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Fetch orders with their items
-  const fetchOrders = async () => {
-    try {
-      const { data: ordersData, error: ordersError } = await supabase.from("orders").select("*")
 
-      if (ordersError) throw ordersError
-
-      const ordersWithItems: Order[] = []
-
-      for (const order of ordersData) {
-        const { data: orderItemsData, error: itemsError } = await supabase
-          .from("order_items")
-          .select("*, menu_items(name)")
-          .eq("order_id", order.id)
-
-        if (itemsError) throw itemsError
-
-        const items = orderItemsData.map((item) => ({
-          menu_item_id: item.menu_item_id,
-          name: item.menu_items?.name || "Unknown Item",
-          quantity: item.quantity,
-          price: item.price,
-        }))
-
-        // Calculate total from items
-        const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-
-        ordersWithItems.push({
-          ...order,
-          items,
-          total,
-        } as Order)
-      }
-
-      setOrders(ordersWithItems)
-    } catch (err) {
-      console.error("Error fetching orders:", err)
-      // If there's an error, set an empty array to avoid breaking the UI
-      setOrders([])
-    }
-  }
 
   // Fetch menu items
   const fetchMenuItems = async () => {
@@ -398,8 +358,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const { error: itemsError } = await supabase.from("order_items").insert(orderItems)
       if (itemsError) throw itemsError
 
-      // Refresh orders to include the new one
-      await fetchOrders()
+
     } catch (err) {
       console.error("Error adding order:", err)
       throw err

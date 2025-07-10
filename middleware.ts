@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 // Define paths that should be accessible without authentication
-const publicPaths = ['/login']
+const publicPaths = ['/login', '/reset-password']
 
 // Define paths that should bypass middleware completely
 const bypassPaths = ['/_next', '/static', '/images', '/fonts', '/favicon', '/api']

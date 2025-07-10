@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "@/components/ui/use-toast"
 import { createRecipe, updateRecipe } from "@/lib/api/recipes"
 import type { Recipe, Ingredient } from "@/lib/types"
@@ -11,15 +12,28 @@ import { validateQuantity } from "@/lib/utils/validation"
 
 interface UseRecipeFormProps {
   initialRecipe?: Recipe | null
-  ingredients: Ingredient[]
   onSave: (recipe: Omit<Recipe, "id" | "name">) => Promise<number | void>
   redirectPath: string
 }
 
-export function useRecipeForm({ initialRecipe, ingredients, onSave, redirectPath }: UseRecipeFormProps) {
+export function useRecipeForm({ initialRecipe, onSave, redirectPath }: UseRecipeFormProps) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Fetch ingredients with React Query
+  const {
+    data: ingredients = [],
+    isLoading: ingredientsLoading,
+  } = useQuery({
+    queryKey: ["ingredients"],
+    queryFn: async () => {
+      const response = await fetch("/api/ingredients")
+      if (!response.ok) throw new Error(`Error: ${response.status}`)
+      return await response.json()
+    },
+  })
 
   // Initialize recipe state with default values or existing recipe
   // Add null check for initialRecipe
@@ -401,8 +415,9 @@ export function useRecipeForm({ initialRecipe, ingredients, onSave, redirectPath
 
   return {
     recipe,
-    loading,
+    loading: loading || ingredientsLoading,
     error,
+    ingredients,
     updateRecipeField,
     updateIngredient,
     updateStep,
