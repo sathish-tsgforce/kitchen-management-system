@@ -14,15 +14,17 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Edit, Trash2, RefreshCw, UserPlus, Plus } from "lucide-react"
+import { Edit, Trash2, RefreshCw, UserPlus, Plus, Lock } from "lucide-react"
 import { UserForm } from "@/components/users/user-form"
 import { useUsers } from "@/lib/hooks/use-users"
 import { useTextSize } from "@/lib/context/text-size-context"
+import { useAuth } from "@/lib/auth-context"
 import type { User } from "@/lib/types/user"
 
 export function UserTable({ users, onEdit, onDelete }) {
   const { roles, locations, error, createUser, updateUser, deleteUser, refreshUsers, refreshLocations } = useUsers()
   const { textSize } = useTextSize()
+  const { user: currentUser } = useAuth()
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
@@ -149,10 +151,17 @@ export function UserTable({ users, onEdit, onDelete }) {
                           <Edit className="h-4 w-4" />
                           <span className="sr-only">Edit</span>
                         </Button>
-                        <Button variant="destructive" size="icon" onClick={() => handleDelete(user)}>
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Delete</span>
-                        </Button>
+                        {currentUser && user.id === currentUser.id ? (
+                          <Button variant="outline" size="icon" disabled title="Cannot delete your own account">
+                            <Lock className="h-4 w-4" />
+                            <span className="sr-only">Cannot Delete</span>
+                          </Button>
+                        ) : (
+                          <Button variant="destructive" size="icon" onClick={() => handleDelete(user)}>
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Delete</span>
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
