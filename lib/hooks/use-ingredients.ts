@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { fetchIngredients, addIngredient, updateIngredient, deleteIngredient } from "@/lib/api/ingredients"
 import type { Ingredient } from "@/lib/types"
 import { toast } from "@/components/ui/use-toast"
-import { useAuth } from "@/lib/auth-context"
+import { useAuth } from "@/lib/context/auth-context"
 
 // Keys for React Query
 export const ingredientKeys = {

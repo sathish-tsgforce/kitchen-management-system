@@ -1,5 +1,5 @@
 // API functions for menu items
-import { supabase } from "@/lib/api/supabase"
+import { supabase } from "@/lib/supabase"
 import type { MenuItem } from "@/lib/types"
 import { uploadFile, deleteFile } from "@/lib/utils/storage"
 

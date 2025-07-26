@@ -8,7 +8,7 @@ interface EditRecipePageProps {
   }
 }
 
-export default function EditRecipePage({ params }: EditRecipePageProps) {
+export default async function EditRecipePage({ params }: EditRecipePageProps) {
   const recipeId = Number.parseInt(params.id, 10)
 
   if (isNaN(recipeId)) {

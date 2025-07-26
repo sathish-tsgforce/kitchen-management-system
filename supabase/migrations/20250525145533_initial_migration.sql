@@ -92,4 +92,4 @@ CREATE INDEX IF NOT EXISTS idx_recipe_steps_recipe_id ON recipe_steps(recipe_id)
 
 INSERT INTO public.roles (name) VALUES
 ('Admin'),
-('Staff');
+('Chef');

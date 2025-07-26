@@ -1,9 +1,9 @@
 import { createClient } from "@/lib/supabase"
-import type { Database } from "@/lib/database.types"
+import type { Location } from "@/lib/types"
 
-export type Location = Database["public"]["Tables"]["locations"]["Row"]
-export type LocationInsert = Database["public"]["Tables"]["locations"]["Insert"]
-export type LocationUpdate = Database["public"]["Tables"]["locations"]["Update"]
+// Use TypeScript utility types for insert and update operations
+type LocationInsert = Omit<Location, 'id'> & { id?: number }
+type LocationUpdate = Partial<Location>
 
 export async function getLocations() {
   const supabase = createClient()

@@ -8,18 +8,19 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Ingredient, Location } from "@/lib/types"
-import { useData } from "@/lib/context/data-context"
+import { useInventory } from "@/lib/hooks/use-inventory"
 import { DialogClose } from "@/components/ui/dialog"
 import { toast } from "@/components/ui/use-toast"
 import { supabase } from "@/lib/supabase"
-import { useAuth } from "@/lib/auth-context"
+import { useAuth } from "@/lib/context/auth-context"
 
 interface InventoryFormProps {
   ingredient?: Ingredient
+  onSuccess?: () => void
 }
 
-export default function InventoryForm({ ingredient }: InventoryFormProps) {
-  const { addIngredient, updateIngredient } = useData()
+export default function InventoryForm({ ingredient, onSuccess }: InventoryFormProps) {
+  const { addIngredient, updateIngredient } = useInventory()
   const { user } = useAuth()
   const [locations, setLocations] = useState<Location[]>([])
 
@@ -28,7 +29,7 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
     quantity: ingredient?.quantity || 0,
     unit: ingredient?.unit || "",
     price: ingredient?.price || 0,
-    category: ingredient?.category || "",
+    category: ingredient?.category || "Other",
     location_id: ingredient?.location_id || 0,
     threshold_quantity: ingredient?.threshold_quantity || 10,
     storage_type: ingredient?.storage_type || "Standard",
@@ -36,7 +37,7 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const categories = ["Vegetables", "Fruits", "Dairy", "Meat", "Seafood", "Grains", "Spices", "Oils", "Other"]
+  const categories = ["Vegetables", "Fruits", "Dairy", "Meat", "Seafood", "Grains", "Spices", "Oils", "Sweeteners", "Herbs", "Baking", "Other"]
   const units = ["g", "kg", "ml", "l", "pcs", "bunch", "tbsp", "tsp", "cup"]
   const storageTypes = ["Standard", "Refrigerated", "Frozen", "Dry", "Vacuum Sealed", "Canned"]
 
@@ -114,6 +115,7 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
           title: "Ingredient updated",
           description: `${formData.name} has been updated successfully.`,
         })
+        if (onSuccess) onSuccess()
       } else {
         // Add new ingredient - ensure we're not sending an ID
         const newIngredientData = {
@@ -135,19 +137,17 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
             title: "Ingredient added",
             description: `${formData.name} has been added to inventory.`,
           })
+          if (onSuccess) onSuccess()
         } catch (err: any) {
-          // Check if it's a duplicate key error
-          if (err.message && err.message.includes("duplicate key")) {
-            setError(
-              `An ingredient with this name already exists. Please use a different name or edit the existing one.`,
-            )
+          if (err.message && err.message.includes("already exists in this location")) {
+            setError(err.message)
             toast({
               title: "Duplicate ingredient",
-              description: `An ingredient named "${formData.name}" already exists.`,
+              description: `An ingredient named "${formData.name}" already exists in this location.`,
               variant: "destructive",
             })
           } else {
-            throw err // Re-throw if it's not a duplicate key error
+            throw err // Re-throw if it's not a duplicate name error
           }
         }
       }
@@ -232,9 +232,6 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
                     {unit}
                   </SelectItem>
                 ))}
-                <SelectItem value="custom" className="cursor-pointer">
-                  Custom...
-                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -261,7 +258,7 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
             <Label htmlFor="category" className="text-sm font-medium">
               Category
             </Label>
-            <Select value={formData.category} onValueChange={(value) => handleChange("category", value)}>
+            <Select value={formData.category || "Other"} onValueChange={(value) => handleChange("category", value)}>
               <SelectTrigger id="category" className="h-8">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
@@ -271,9 +268,6 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
                     {category}
                   </SelectItem>
                 ))}
-                <SelectItem value="custom" className="cursor-pointer">
-                  Custom...
-                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -312,7 +306,7 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
             <Label htmlFor="storage_type" className="text-sm font-medium">
               Storage Type
             </Label>
-            <Select value={formData.storage_type} onValueChange={(value) => handleChange("storage_type", value)}>
+            <Select value={formData.storage_type || "Standard"} onValueChange={(value) => handleChange("storage_type", value)}>
               <SelectTrigger id="storage_type" className="h-8">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
@@ -322,9 +316,6 @@ export default function InventoryForm({ ingredient }: InventoryFormProps) {
                     {type}
                   </SelectItem>
                 ))}
-                <SelectItem value="custom" className="cursor-pointer">
-                  Custom...
-                </SelectItem>
               </SelectContent>
             </Select>
           </div>

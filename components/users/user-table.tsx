@@ -18,8 +18,8 @@ import { Edit, Trash2, RefreshCw, UserPlus, Plus, Lock } from "lucide-react"
 import { UserForm } from "@/components/users/user-form"
 import { useUsers } from "@/lib/hooks/use-users"
 import { useTextSize } from "@/lib/context/text-size-context"
-import { useAuth } from "@/lib/auth-context"
-import type { User } from "@/lib/types/user"
+import { useAuth } from "@/lib/context/auth-context"
+import type { User } from "@/lib/types"
 
 export function UserTable({ users, onEdit, onDelete }) {
   const { roles, locations, error, createUser, updateUser, deleteUser, refreshUsers, refreshLocations } = useUsers()

@@ -3,12 +3,10 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
-import { AuthProvider } from "@/lib/auth-context"
-import { DataProvider } from "@/lib/context/data-context"
+import { AuthProvider } from "@/lib/context/auth-context"
 import { QueryProvider } from "@/components/providers/query-provider"
 import { TextSizeProviderWrapper } from "@/components/providers/text-size-provider-wrapper"
 import { Header } from "@/components/layout/header"
-import { ClientHeader } from "@/components/layout/client-header"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -28,12 +26,10 @@ export default function RootLayout({
       <body className={`${inter.className} min-h-screen bg-gray-50`}>
         <QueryProvider>
           <AuthProvider>
-            <DataProvider>
-              <TextSizeProviderWrapper>
-                {children}
-                <Toaster />
-              </TextSizeProviderWrapper>
-            </DataProvider>
+            <TextSizeProviderWrapper>
+              {children}
+              <Toaster />
+            </TextSizeProviderWrapper>
           </AuthProvider>
         </QueryProvider>
       </body>

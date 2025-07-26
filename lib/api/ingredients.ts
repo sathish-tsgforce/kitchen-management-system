@@ -1,5 +1,5 @@
 // API functions for ingredients
-import { supabase } from "@/lib/api/supabase"
+import { supabase } from "@/lib/supabase"
 import type { Ingredient } from "@/lib/types"
 
 export async function fetchIngredients(): Promise<Ingredient[]> {
@@ -25,37 +25,22 @@ export async function addIngredient(ingredient: Omit<Ingredient, "id">): Promise
     const { id, ...ingredientWithoutId } = ingredient as any
 
     console.log("Adding ingredient without ID:", ingredientWithoutId)
-
-    // First check if an ingredient with the same name already exists
+    
+    // Check if an ingredient with the same name exists in the same location
     const { data: existingData, error: checkError } = await supabase
       .from("ingredients")
       .select("id")
       .eq("name", ingredientWithoutId.name)
+      .eq("location_id", ingredientWithoutId.location_id)
       .limit(1)
 
     if (checkError) {
       console.error("Error checking for existing ingredient:", checkError)
     }
 
-    // If ingredient with same name exists, update it instead
+    // If ingredient with same name exists in the same location, throw an error
     if (existingData && existingData.length > 0) {
-      const existingId = existingData[0].id
-      console.log(
-        `Ingredient with name "${ingredientWithoutId.name}" already exists with ID ${existingId}, updating instead`,
-      )
-
-      const { data: updatedData, error: updateError } = await supabase
-        .from("ingredients")
-        .update(ingredientWithoutId)
-        .eq("id", existingId)
-        .select(`
-          *,
-          location:locations(id, name)
-        `)
-
-      if (updateError) throw updateError
-
-      return updatedData && updatedData.length > 0 ? (updatedData[0] as Ingredient) : null
+      throw new Error(`An ingredient with name "${ingredientWithoutId.name}" already exists in this location.`)
     }
 
     // Use insert with onConflict to handle potential duplicates

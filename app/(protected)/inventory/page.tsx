@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import { Plus, ArrowUpDown, Edit, Trash2, Download, Filter, RefreshCw, Loader2Icon, Loader2 } from "lucide-react"
+import { useState, useCallback, useEffect } from "react"
+import { Plus, ArrowUpDown, Edit, Trash2, Download, Filter, RefreshCw, Loader2Icon, Loader2, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -9,8 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import InventoryForm from "@/components/inventory/inventory-form"
-import { useData } from "@/lib/context/data-context"
-import { useAuth } from "@/lib/auth-context"
+import { useInventory } from "@/lib/hooks/use-inventory"
+import { useAuth } from "@/lib/context/auth-context"
+import { supabase } from "@/lib/supabase"
+import type { Location } from "@/lib/types"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,23 +28,55 @@ import { TextSizeControls } from "@/components/accessibility/text-size-controls"
 import { useTextSize } from "@/lib/context/text-size-context"
 
 export default function InventoryPage() {
-  const { ingredients, deleteIngredient, refreshData } = useData()
+  const { ingredients, deleteIngredient, refreshData } = useInventory()
   const [searchQuery, setSearchQuery] = useState("")
   const [filterCategory, setFilterCategory] = useState<string>("all")
+  const [filterLocation, setFilterLocation] = useState<string>("all")
+  const [locations, setLocations] = useState<Location[]>([])
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "ascending" | "descending" } | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [ingredientToDelete, setIngredientToDelete] = useState<number | null>(null)
   const [showLowQuantityOnly, setShowLowQuantityOnly] = useState(false)
   const { toast } = useToast()
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [addDialogOpen, setAddDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState<number | null>(null)
   const { user } = useAuth()
   const { textSize } = useTextSize()
 
   // Get unique categories for filter dropdown
   const categories = ["all", ...new Set(ingredients.map((ingredient) => ingredient.category))].filter(Boolean)
   
-  const userIngredients = user?.location_id
-    ? ingredients.filter((ingredient) => ingredient.location?.id === user.location_id) : ingredients
+  // Fetch locations for Admin users
+  useEffect(() => {
+    if (user?.role === "Admin") {
+      const fetchLocations = async () => {
+        const { data, error } = await supabase
+          .from("locations")
+          .select("*")
+          .eq("is_active", true)
+          .order("name")
+        
+        if (error) {
+          console.error("Error fetching locations:", error)
+          return
+        }
+        
+        setLocations(data || [])
+      }
+      
+      fetchLocations()
+    }
+  }, [user?.role])
+  
+  // Filter ingredients by user location (for non-admin) or selected location (for admin)
+  // If user is null (logged out), don't show any ingredients
+  const userIngredients = !user ? [] : 
+    user.role === "Admin" && filterLocation !== "all"
+      ? ingredients.filter((ingredient) => ingredient.location?.id === parseInt(filterLocation))
+      : user.location_id
+        ? ingredients.filter((ingredient) => ingredient.location?.id === user.location_id)
+        : ingredients
 
   // Sort ingredients
   const sortedIngredients = [...userIngredients].sort((a, b) => {
@@ -251,9 +285,12 @@ export default function InventoryPage() {
         <div className="flex justify-between items-center">
           <h1 className={`font-bold text-gray-900 ${textSize === 'large' ? 'text-4xl' : textSize === 'x-large' ? 'text-5xl' : 'text-3xl'}`}>Inventory</h1>
           <div className="flex gap-2">
-            <Dialog>
+            <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className={`w-full md:w-auto bg-green-800 hover:bg-green-900 ${textClasses.button}`}>
+                <Button 
+                  className={`w-full md:w-auto bg-green-800 hover:bg-green-900 ${textClasses.button}`}
+                  onClick={() => setAddDialogOpen(true)}
+                >
                   <Plus className="mr-2 h-5 w-5" />
                   Add New Ingredient
                 </Button>
@@ -262,7 +299,7 @@ export default function InventoryPage() {
                 <DialogHeader className="pb-2 mb-1">
                   <DialogTitle className={`font-semibold ${textClasses.dialogTitle}`}>Add New Ingredient</DialogTitle>
                 </DialogHeader>
-                <InventoryForm />
+                <InventoryForm onSuccess={() => setAddDialogOpen(false)} />
               </DialogContent>
              </Dialog>
             <TextSizeControls />
@@ -301,6 +338,35 @@ export default function InventoryPage() {
             </SelectContent>
           </Select>
         </div>
+
+        {/* Location filter for Admin users */}
+        {user?.role === "Admin" && locations.length > 0 && (
+          <div className="w-full md:w-1/4">
+            <label htmlFor="filter-location" className={`block font-medium text-gray-700 mb-1 ${textClasses.label}`}>
+              <MapPin className="inline mr-1 h-4 w-4" />
+              Filter by Location
+            </label>
+            <Select value={filterLocation} onValueChange={setFilterLocation}>
+              <SelectTrigger id="filter-location" className={`w-full ${textClasses.tableCell}`}>
+                <SelectValue placeholder="Select location" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className={`cursor-pointer ${textClasses.tableCell}`}>
+                  All Locations
+                </SelectItem>
+                {locations.map((location) => (
+                  <SelectItem 
+                    key={location.id} 
+                    value={location.id.toString()} 
+                    className={`cursor-pointer ${textClasses.tableCell}`}
+                  >
+                    {location.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="w-full md:w-auto flex flex-col md:flex-row gap-2 md:ml-auto">          
           <Button
@@ -419,9 +485,14 @@ export default function InventoryPage() {
                   <TableCell className={textClasses.tableCell}>{ingredient.storage_type || "Standard"}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Dialog>
+                      <Dialog open={editDialogOpen === ingredient.id} onOpenChange={(open) => setEditDialogOpen(open ? ingredient.id : null)}>
                         <DialogTrigger asChild>
-                          <Button variant="outline" size="icon" aria-label={`Edit ${ingredient.name}`}>
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            aria-label={`Edit ${ingredient.name}`}
+                            onClick={() => setEditDialogOpen(ingredient.id)}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
                         </DialogTrigger>
@@ -429,7 +500,10 @@ export default function InventoryPage() {
                           <DialogHeader className="pb-2 mb-1">
                             <DialogTitle className={`font-semibold ${textClasses.dialogTitle}`}>Edit Ingredient</DialogTitle>
                           </DialogHeader>
-                          <InventoryForm ingredient={ingredient} />
+                          <InventoryForm 
+                            ingredient={ingredient} 
+                            onSuccess={() => setEditDialogOpen(null)} 
+                          />
                         </DialogContent>
                       </Dialog>
 

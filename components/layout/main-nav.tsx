@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useTextSize } from "@/lib/context/text-size-context"
-import { useAuth } from "@/lib/auth-context"
+import { useAuth } from "@/lib/context/auth-context"
 
 export function MainNav() {
   const pathname = usePathname()

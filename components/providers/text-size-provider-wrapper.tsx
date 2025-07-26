@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuth } from "@/lib/auth-context"
+import { useAuth } from "@/lib/context/auth-context"
 import { TextSizeProvider } from "@/lib/context/text-size-context"
 
 export function TextSizeProviderWrapper({ children }: { children: React.ReactNode }) {

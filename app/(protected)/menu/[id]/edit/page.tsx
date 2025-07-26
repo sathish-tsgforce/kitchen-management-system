@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { use } from "react"
 
 export default function EditMenuItemPage({ params }: { params: { id: string } }) {
-  const id = Number.parseInt(params.id)
+  const resolvedParams = use(params)
+  const id = Number.parseInt(resolvedParams.id)
   const { data: menuItem, isLoading, isError } = useMenuItem(id)
 
   if (isLoading) {

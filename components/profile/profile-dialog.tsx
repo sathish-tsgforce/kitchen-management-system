@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { Loader2 } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
-import { useAuth } from "@/lib/auth-context"
+import { useAuth } from "@/lib/context/auth-context"
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),

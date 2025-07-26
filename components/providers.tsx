@@ -1,9 +1,9 @@
 "use client"
 
 import type React from "react"
-import { DataProvider } from "@/lib/context/data-context"
-import { AuthProvider } from "@/lib/auth-context"
+import { AuthProvider } from "@/lib/context/auth-context"
 import { Toaster } from "@/components/ui/toaster"
+import { QueryProvider } from "@/components/providers/query-provider"
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -12,10 +12,10 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   return (
     <AuthProvider>
-      <DataProvider>
+      <QueryProvider>
         {children}
         <Toaster />
-      </DataProvider>
+      </QueryProvider>
     </AuthProvider>
   )
 }

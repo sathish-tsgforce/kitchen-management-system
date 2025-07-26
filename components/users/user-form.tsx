@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Loader2 } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 import { supabase } from "@/lib/supabase"
-import type { User, UserRole, UserLocation } from "@/lib/types/user"
+import type { User, Role as UserRole, Location as UserLocation } from "@/lib/types"
 
 // Dynamic form schema for creating users
 const createUserFormSchema = (roles: UserRole[]) => {
@@ -90,6 +90,7 @@ export function UserForm({ open, onOpenChange, onSubmit, user, roles, locations,
   const [showPassword, setShowPassword] = useState(!user)
   const [hasChanges, setHasChanges] = useState(false)
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
+  const [isInPasswordChangeMode, setIsInPasswordChangeMode] = useState(false)
   const isEditing = !!user
 
   // Default form values
@@ -122,6 +123,7 @@ export function UserForm({ open, onOpenChange, onSubmit, user, roles, locations,
       passwordForm.reset({ password: "", confirmPassword: "" })
       setShowPassword(!isEditing)
       setHasChanges(false)
+      setIsInPasswordChangeMode(false)
     }
   }, [form, passwordForm, open, user, isEditing])
 
@@ -183,8 +185,12 @@ export function UserForm({ open, onOpenChange, onSubmit, user, roles, locations,
         description: "Password updated successfully",
       })
       
-      passwordForm.reset()
-      setShowPassword(false)
+      // Show success state for a moment before closing
+      setTimeout(() => {
+        passwordForm.reset()
+        setShowPassword(false)
+        setIsInPasswordChangeMode(false)
+      }, 1000) // 1 second delay
     } catch (error: any) {
       toast({
         title: "Error",
@@ -315,7 +321,14 @@ export function UserForm({ open, onOpenChange, onSubmit, user, roles, locations,
               </>
             )}
             {isEditing && !showPassword && (
-              <Button type="button" variant="outline" onClick={() => setShowPassword(true)}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setShowPassword(true)
+                  setIsInPasswordChangeMode(true)
+                }}
+              >
                 Change Password
               </Button>
             )}
@@ -379,6 +392,7 @@ export function UserForm({ open, onOpenChange, onSubmit, user, roles, locations,
                       onClick={() => {
                         passwordForm.reset()
                         setShowPassword(false)
+                        setIsInPasswordChangeMode(false)
                       }}
                     >
                       Cancel
@@ -456,7 +470,7 @@ export function UserForm({ open, onOpenChange, onSubmit, user, roles, locations,
               </Button>
               <Button 
                 type="submit" 
-                disabled={isLoading || (isEditing && !hasChanges && !showPassword)}
+                disabled={isLoading || (isEditing && (!hasChanges || isInPasswordChangeMode))}
               >
                 {isLoading ? (
                   <>

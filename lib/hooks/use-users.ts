@@ -3,15 +3,16 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "@/components/ui/use-toast"
-import type { User, NewUser, UpdateUser, UserRole } from "@/lib/types/user"
-import type { Location } from "@/lib/api/locations"
+import { getLocations } from "@/lib/api/locations"
+import { fetchRoles } from "@/lib/api/users"
+import type { User, NewUser, UpdateUser, Role as UserRole, Location } from "@/lib/types"
 
 export function useUsers() {
   const [error, setError] = useState<string | null>(null)
   const [debugInfo, setDebugInfo] = useState<any>(null)
   const queryClient = useQueryClient()
 
-  // Fetch users with React Query
+  // Fetch users with React Query from the API endpoint
   const {
     data: users = [],
     isLoading: usersLoading,
@@ -22,7 +23,9 @@ export function useUsers() {
       try {
         setError(null)
         const response = await fetch("/api/users")
-        if (!response.ok) throw new Error(`Error: ${response.status}`)
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`)
+        }
         return await response.json()
       } catch (err: any) {
         setError(err.message)
@@ -41,9 +44,7 @@ export function useUsers() {
     queryKey: ["roles"],
     queryFn: async () => {
       try {
-        const response = await fetch("/api/roles")
-        if (!response.ok) throw new Error(`Error: ${response.status}`)
-        return await response.json()
+        return await fetchRoles()
       } catch (err: any) {
         console.error("Error fetching roles:", err)
         return []
@@ -60,9 +61,7 @@ export function useUsers() {
     queryKey: ["locations"],
     queryFn: async () => {
       try {
-        const response = await fetch("/api/locations")
-        if (!response.ok) throw new Error(`Error: ${response.status}`)
-        return await response.json()
+        return await getLocations()
       } catch (err: any) {
         console.error("Error fetching locations:", err)
         return []
@@ -80,7 +79,9 @@ export function useUsers() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
       })
-      if (!response.ok) throw new Error(`Error: ${response.status}`)
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`)
+      }
       return await response.json()
     },
     onSuccess: (newUser) => {
@@ -107,7 +108,9 @@ export function useUsers() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
       })
-      if (!response.ok) throw new Error(`Error: ${response.status}`)
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`)
+      }
       return await response.json()
     },
     onSuccess: () => {
@@ -126,13 +129,15 @@ export function useUsers() {
     },
   })
 
-  // Delete user mutation
+  // Delete user mutation - using API endpoint
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
       const response = await fetch(`/api/users/${userId}`, {
         method: "DELETE",
       })
-      if (!response.ok) throw new Error(`Error: ${response.status}`)
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`)
+      }
       return await response.json()
     },
     onSuccess: () => {

@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label"
 import { useTextSize } from "@/lib/context/text-size-context"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useAuth } from "@/lib/auth-context"
+import { useAuth } from "@/lib/context/auth-context"
 import { supabase } from "@/lib/supabase"
 import type { Recipe, Location } from "@/lib/types"
 
