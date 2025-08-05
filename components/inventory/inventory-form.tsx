@@ -27,7 +27,7 @@ export default function InventoryForm({ ingredient, onSuccess }: InventoryFormPr
   const [formData, setFormData] = useState({
     name: ingredient?.name || "",
     quantity: ingredient?.quantity || 0,
-    unit: ingredient?.unit || "",
+    unit: ingredient?.unit || "kg",
     price: ingredient?.price || 0,
     category: ingredient?.category || "Other",
     location_id: ingredient?.location_id || 0,
@@ -222,7 +222,7 @@ export default function InventoryForm({ ingredient, onSuccess }: InventoryFormPr
             <Label htmlFor="unit" className="text-sm font-medium">
               Unit
             </Label>
-            <Select value={formData.unit} onValueChange={(value) => handleChange("unit", value)}>
+            <Select value={formData.unit || "kg"} onValueChange={(value) => handleChange("unit", value)} required>
               <SelectTrigger id="unit" className="h-8">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>

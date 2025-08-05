@@ -9,7 +9,7 @@ interface RecipePageProps {
   }
 }
 
-export default function RecipePage({ params }: RecipePageProps) {
+export default async function RecipePage({ params }: RecipePageProps) {
   const recipeId = Number.parseInt(params.id, 10)
 
   if (isNaN(recipeId)) {
