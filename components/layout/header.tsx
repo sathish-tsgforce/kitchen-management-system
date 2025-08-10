@@ -11,11 +11,11 @@ export function Header() {
           <Image 
             src="/logo.jpg" 
             alt="Kitchen Management System Logo" 
-            width={100} 
-            height={60} 
+            width={120} 
+            height={100} 
             className="rounded-md object-cover"
           />
-          &nbsp;
+          &nbsp;&nbsp;&nbsp;&nbsp;
           <span className="hidden sm:inline">Kitchen Management System</span>
           <span className="sm:hidden">KMS</span>
         </Link>

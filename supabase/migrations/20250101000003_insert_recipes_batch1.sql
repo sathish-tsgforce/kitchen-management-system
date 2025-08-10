@@ -2,15 +2,15 @@
 
 -- Insert recipes
 INSERT INTO public.recipes (menu_item_id, standard_serving_pax, accessibility_notes) VALUES
-(1, 35, 'Contains gluten from pasta'),
-(2, 35, 'Contains gluten from pasta, dairy from cream and cheese'),
-(3, 20, 'Contains gluten from pasta, dairy from multiple cheeses'),
-(4, 1, 'Seasoning blend - check for allergens'),
-(5, 1, 'Contains gluten from flour coating'),
-(6, 50, 'Citrus-based sauce'),
-(7, 70, 'Fish dish - check for fish allergies'),
-(8, 35, 'Contains tomatoes and various vegetables'),
-(9, 70, 'Plain rice dish - generally allergen-free');
+((select id from public.menu_items where name='Tomato Pasta'), 35, 'Contains gluten from pasta'),
+((select id from public.menu_items where name='Carbonara Pasta'), 35, 'Contains gluten from pasta, dairy from cream and cheese'),
+((select id from public.menu_items where name='Mac & Cheese'), 20, 'Contains gluten from pasta, dairy from multiple cheeses'),
+((select id from public.menu_items where name='Seasoning for Chicken Katsu'), 1, 'Seasoning blend - check for allergens'),
+((select id from public.menu_items where name='Crispy Lemon Chicken Katsu'), 1, 'Contains gluten from flour coating'),
+((select id from public.menu_items where name='Lemon Sauce'), 50, 'Citrus-based sauce'),
+((select id from public.menu_items where name='Sweet & Sour Dory'), 70, 'Fish dish - check for fish allergies'),
+((select id from public.menu_items where name='Sweet & Sour Sauce'), 35, 'Contains tomatoes and various vegetables'),
+((select id from public.menu_items where name='Jasmine Rice'), 70, 'Plain rice dish - generally allergen-free');
 
 -- Insert recipe ingredients
 INSERT INTO public.recipe_ingredients (recipe_id, ingredient_id, quantity_for_recipe) VALUES

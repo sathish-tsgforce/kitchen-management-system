@@ -150,18 +150,12 @@ export function MenuItemTable() {
                 <TableRow key={item.id}>
                   <TableCell>
                     <div className="relative h-16 w-16 rounded-md overflow-hidden">
-                      {item.image_url ? (
-                        <Image
-                          src={item.image_url || "/placeholder.svg"}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="h-full w-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
-                          No image
-                        </div>
-                      )}
+                      <Image
+                        src={item.image_url || "/recipe_placeholder.jpg"}
+                        alt={item.name}
+                        fill
+                        className="object-cover"
+                      />
                     </div>
                   </TableCell>
                   <TableCell className={`font-medium ${textClasses.tableCell}`}>{item.name}</TableCell>

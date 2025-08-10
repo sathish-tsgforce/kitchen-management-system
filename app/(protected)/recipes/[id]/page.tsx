@@ -10,7 +10,8 @@ interface RecipePageProps {
 }
 
 export default async function RecipePage({ params }: RecipePageProps) {
-  const recipeId = Number.parseInt(params.id, 10)
+  const { id } = await params
+  const recipeId = Number.parseInt(id, 10)
 
   if (isNaN(recipeId)) {
     notFound()
