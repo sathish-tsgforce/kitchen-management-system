@@ -337,9 +337,16 @@ export default function RecipeForm({
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-sm text-gray-500 mt-1">
-                Note: Each menu item can only have one recipe associated with it.
-              </p>
+              <div className="text-sm text-gray-500 mt-1 space-y-2">
+                <p>Note: Before adding new recipe add a new menu item.</p>
+                <br/>
+                  <Link href="/menu/new">
+                    <Button type="button" className="bg-green-800 hover:bg-green-900 text-white">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add new menu item
+                  </Button>
+                </Link>
+              </div>
             </div>
 
             <div className="grid gap-2">

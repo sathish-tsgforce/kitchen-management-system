@@ -36,7 +36,7 @@ export async function fetchMenuItemById(id: number): Promise<MenuItem | null> {
 // Add a new menu item
 export async function addMenuItem(menuItem: Omit<MenuItem, "id">, imageFile?: File): Promise<MenuItem | null> {
   try {
-    let imageUrl = menuItem.image_url || null
+    let imageUrl = menuItem.image_url || ''
 
     // Upload image if provided
     if (imageFile) {
