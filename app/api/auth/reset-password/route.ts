@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json()
+    const { email, origin } = await request.json()
     
     if (!email) {
       return NextResponse.json(
@@ -14,11 +14,11 @@ export async function POST(request: NextRequest) {
 
     const supabase = createClient()
     
-    // Get the origin from the request headers
-    const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    // Use origin from client or fallback to environment variable
+    const redirectOrigin = origin || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/reset-password`,
+      redirectTo: `${redirectOrigin}/reset-password`,
     })
 
     if (error) {

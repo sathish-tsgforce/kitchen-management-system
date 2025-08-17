@@ -88,7 +88,7 @@ export default function LoginPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, origin: window.location.origin }),
       })
 
       const data = await response.json()
