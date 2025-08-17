@@ -67,7 +67,6 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
 > These should match the keys from your Supabase project.
-
 ---
 
 ## 4. Run the Development Server
@@ -83,7 +82,6 @@ This will start the Next.js development environment. Open your browser and go to
 ```
 http://localhost:3000
 ```
-
 
 ## 5. Project Structure (Quick Overview)
 
