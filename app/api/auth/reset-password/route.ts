@@ -5,20 +5,20 @@ export async function POST(request: NextRequest) {
   try {
     const { email, origin } = await request.json()
     
-    if (!email) {
+    console.log('Received email:', email)
+    console.log('Received origin:', origin)
+    
+    if (!email || !origin) {
       return NextResponse.json(
-        { error: 'Email is required' },
+        { error: 'Email and origin are required' },
         { status: 400 }
       )
     }
 
     const supabase = createClient()
     
-    // Use origin from client or fallback to environment variable
-    const redirectOrigin = origin || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-    
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${redirectOrigin}/reset-password`,
+      redirectTo: `${origin}/reset-password`,
     })
 
     if (error) {
