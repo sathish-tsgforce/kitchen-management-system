@@ -101,7 +101,6 @@ fortitude-culina/
 └── tsconfig.json         # TypeScript configuration
 ```
 
-
 ## Vercel Deployment
 
-Link - https://v0-recipe-management-mockup.vercel.app
+Link - https://kitchen-management-system-dusky.vercel.app/
