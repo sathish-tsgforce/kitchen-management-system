@@ -17,14 +17,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Pencil, Trash2, Plus } from "lucide-react"
+import { Edit, Trash2, Plus, Divide } from "lucide-react"
 import { formatCurrency } from "@/lib/utils/format"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useTextSize } from "@/lib/context/text-size-context"
 
 export function MenuItemTable() {
   const { data: menuItems, isLoading, isError } = useMenuItems()
   const deleteMenuItem = useDeleteMenuItem()
   const [deleteId, setDeleteId] = useState<number | null>(null)
+  const { textSize } = useTextSize()
 
   // Handle delete confirmation
   const handleDelete = (id: number) => {
@@ -44,15 +46,33 @@ export function MenuItemTable() {
     setDeleteId(null)
   }
 
+  // Helper function to get text size classes
+  const getTextSizeClasses = () => {
+    switch (textSize) {
+      case "large":
+        return {
+          tableHeader: "text-base",
+          tableCell: "text-base",
+        }
+      case "x-large":
+        return {
+          tableHeader: "text-lg",
+          tableCell: "text-lg",
+        }
+      default:
+        return {
+          tableHeader: "text-sm",
+          tableCell: "text-sm",
+        }
+    }
+  }
+
+  const textClasses = getTextSizeClasses()
+
   // Loading state
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Menu Items</CardTitle>
-          <CardDescription>Manage your menu items</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="flex flex-col h-full">
           <div className="flex justify-end mb-4">
             <Skeleton className="h-10 w-32" />
           </div>
@@ -92,8 +112,7 @@ export function MenuItemTable() {
               ))}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+      </div>
     )
   }
 
@@ -103,7 +122,6 @@ export function MenuItemTable() {
       <Card>
         <CardHeader>
           <CardTitle>Menu Items</CardTitle>
-          <CardDescription>Manage your menu items</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center p-4 text-red-500">Error loading menu items. Please try again later.</div>
@@ -113,22 +131,10 @@ export function MenuItemTable() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Menu Items</CardTitle>
-        <CardDescription>Manage your menu items</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex justify-end mb-4">
-          <Button asChild>
-            <Link href="/menu/new">
-              <Plus className="mr-2 h-4 w-4" /> Add Menu Item
-            </Link>
-          </Button>
-        </div>
-
+   <div className="flex flex-col h-full">
         {menuItems && menuItems.length > 0 ? (
-          <Table>
+          <div className="rounded-md border">
+            <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Image</TableHead>
@@ -144,29 +150,23 @@ export function MenuItemTable() {
                 <TableRow key={item.id}>
                   <TableCell>
                     <div className="relative h-16 w-16 rounded-md overflow-hidden">
-                      {item.image_url ? (
-                        <Image
-                          src={item.image_url || "/placeholder.svg"}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="h-full w-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
-                          No image
-                        </div>
-                      )}
+                      <Image
+                        src={item.image_url || "/recipe_placeholder.jpg"}
+                        alt={item.name}
+                        fill
+                        className="object-cover"
+                      />
                     </div>
                   </TableCell>
-                  <TableCell className="font-medium">{item.name}</TableCell>
-                  <TableCell className="max-w-xs truncate">{item.description || "No description"}</TableCell>
-                  <TableCell>{item.minimum_order_quantity}</TableCell>
-                  <TableCell>{formatCurrency(item.price)}</TableCell>
+                  <TableCell className={`font-medium ${textClasses.tableCell}`}>{item.name}</TableCell>
+                  <TableCell className={`max-w-xs truncate ${textClasses.tableCell}`}>{item.description || "No description"}</TableCell>
+                  <TableCell className={textClasses.tableCell}>{item.minimum_order_quantity}</TableCell>
+                  <TableCell className={textClasses.tableCell}>{formatCurrency(item.price)}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button variant="outline" size="icon" asChild>
                         <Link href={`/menu/${item.id}/edit`}>
-                          <Pencil className="h-4 w-4" />
+                          <Edit className="h-4 w-4" />
                         </Link>
                       </Button>
                       <Button variant="destructive" size="icon" onClick={() => handleDelete(item.id)}>
@@ -177,15 +177,12 @@ export function MenuItemTable() {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+            </Table>
+          </div>
         ) : (
           <div className="text-center p-8 border rounded-md">
-            <p className="text-gray-500">No menu items found.</p>
-            <Button asChild className="mt-4">
-              <Link href="/menu/new">
-                <Plus className="mr-2 h-4 w-4" /> Add your first menu item
-              </Link>
-            </Button>
+            <p className={`text-gray-500 ${textClasses.tableCell}`}>No menu items found.</p>
+
           </div>
         )}
 
@@ -205,7 +202,6 @@ export function MenuItemTable() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </CardContent>
-    </Card>
+    </div>
   )
 }

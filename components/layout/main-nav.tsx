@@ -4,38 +4,56 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useTextSize } from "@/lib/context/text-size-context"
+import { useAuth } from "@/lib/context/auth-context"
 
 export function MainNav() {
   const pathname = usePathname()
   const { textSize } = useTextSize()
+  const { user } = useAuth()
 
-  const routes = [
+  // Define all possible routes
+  const allRoutes = [
     {
-      href: "/menu",
-      label: "Menu",
-      active: pathname === "/menu" || pathname.startsWith("/menu/"),
+      href: "/recipes",
+      label: "Recipes",
+      active: pathname === "/recipes" || pathname.startsWith("/recipes/"),
+      roles: ["Admin", "Chef", "Server"] // Available to all roles
     },
     {
       href: "/inventory",
       label: "Inventory",
       active: pathname === "/inventory",
+      roles: ["Admin", "Chef", "Server"] // Available to all roles
     },
     {
-      href: "/recipes",
-      label: "Recipes",
-      active: pathname === "/recipes" || pathname.startsWith("/recipes/"),
+      href: "/locations",
+      label: "Locations",
+      active: pathname === "/locations",
+      roles: ["Admin"] // Admin only
     },
+
     {
-      href: "/orders",
-      label: "Orders",
-      active: pathname === "/orders" || pathname.startsWith("/orders/"),
+      href: "/menu",
+      label: "Menu",
+      active: pathname === "/menu" || pathname.startsWith("/menu/"),
+      roles: ["Admin"] // Admin only
     },
     {
       href: "/users",
       label: "Users",
       active: pathname === "/users",
+      roles: ["Admin"] // Admin only
     },
   ]
+
+  // Filter routes based on user role
+  const routes = allRoutes.filter(route => {
+    // If no user or no role, don't show any routes (shouldn't happen due to auth)
+    if (!user || !user.role) return false
+    
+    // Check if the user's role is in the allowed roles for this route
+    return route.roles.includes(user.role)
+  })
 
   return (
     <nav className="flex items-center space-x-4 lg:space-x-6">

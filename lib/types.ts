@@ -1,3 +1,4 @@
+
 export interface Recipe {
   id: number
   menu_item_id: number
@@ -33,7 +34,13 @@ export interface Ingredient {
   unit: string
   price?: number
   category?: string
-  location?: string
+  location_id: number
+  location?: {
+    id: number
+    name: string
+  }
+  threshold_quantity?: number
+  storage_type?: string
 }
 
 export interface MenuItem {
@@ -45,36 +52,41 @@ export interface MenuItem {
   price: number
 }
 
-export interface OrderItem {
-  menu_item_id: number
-  name: string
-  quantity: number
-  price: number
-}
-
-export interface Order {
-  id: number
-  date: string
-  customer_name: string
-  delivery_address: string
-  delivery_date: string
-  kitchen_location: string
-  chef_id?: string
-  chef_name?: string // Added chef name for display
-  items: OrderItem[]
-  total: number
-  status: "pending" | "accepted" | "in_progress" | "completed" | "cancelled"
-  notes?: string
-}
-
 export interface User {
   id: string
   email: string
+  name: string
+  role_id: number
+  role?: Role | null
+  location_id?: number | null
+  location?: Location | null
+}
+
+export interface NewUser {
+  email: string
+  password: string
+  name: string
+  role_id: number
+  location_id?: number | null
+}
+
+export interface UpdateUser {
+  id: string
+  email?: string
+  password?: string
   name?: string
   role_id?: number
+  location_id?: number | null
 }
 
 export interface Role {
   id: number
   name: string
+}
+
+export interface Location {
+  id: number
+  name: string
+  address?: string
+  is_active: boolean
 }

@@ -66,13 +66,28 @@ export default function IngredientField({
     }
   }, [ingredient.ingredient_id, ingredient.quantity, selectedIngredient])
 
-  // Update filtered ingredients when search term changes
+  // Update filtered ingredients when search term changes - show only unique names
   useEffect(() => {
+    // Create a map to store unique ingredients by name
+    const uniqueIngredientsByName = new Map();
+    
+    // Process all ingredients, keeping only the first occurrence of each name
+    availableIngredients.forEach(ingredient => {
+      if (!uniqueIngredientsByName.has(ingredient.name.toLowerCase())) {
+        uniqueIngredientsByName.set(ingredient.name.toLowerCase(), ingredient);
+      }
+    });
+    
+    // Convert the map values back to an array
+    const uniqueIngredients = Array.from(uniqueIngredientsByName.values());
+    
     if (!searchTerm.trim()) {
-      setFilteredIngredients(availableIngredients)
+      setFilteredIngredients(uniqueIngredients);
     } else {
-      const filtered = availableIngredients.filter((item) => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
-      setFilteredIngredients(filtered)
+      const filtered = uniqueIngredients.filter((item) => 
+        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredIngredients(filtered);
     }
   }, [searchTerm, availableIngredients])
 
@@ -196,12 +211,12 @@ export default function IngredientField({
                           )}
                         >
                           <div className="flex items-center">
-                            {ingredient.ingredient_id === item.id && <Check className="mr-2 h-4 w-4 text-green-500" />}
+                            {ingredient.ingredient_id === item.id && <Check className="mr-2 h-4 w-4 text-green-600" />}
                             <span>{item.name}</span>
                             {isAlreadySelected && <span className="ml-2 text-xs text-red-500">Already added</span>}
                           </div>
                           <span className="text-xs text-gray-500">
-                            {item.quantity} {item.unit}
+                            {item.unit}
                           </span>
                         </li>
                       )
@@ -216,7 +231,7 @@ export default function IngredientField({
 
           {selectedIngredient && !isOpen && (
             <p className="text-xs text-gray-500">
-              In stock: {selectedIngredient.quantity} {selectedIngredient.unit}
+              Unit: {selectedIngredient.unit}
             </p>
           )}
         </div>

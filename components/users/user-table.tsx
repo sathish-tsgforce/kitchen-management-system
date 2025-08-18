@@ -14,22 +14,24 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Pencil, Trash2, RefreshCw, UserPlus } from "lucide-react"
+import { Edit, Trash2, RefreshCw, UserPlus, Plus, Lock } from "lucide-react"
 import { UserForm } from "@/components/users/user-form"
 import { useUsers } from "@/lib/hooks/use-users"
-import type { User } from "@/lib/types/user"
+import { useTextSize } from "@/lib/context/text-size-context"
+import { useAuth } from "@/lib/context/auth-context"
+import type { User } from "@/lib/types"
 
-export function UserTable() {
-  const { users, roles, isLoading, error, createUser, updateUser, deleteUser, refreshUsers } = useUsers()
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+export function UserTable({ users, onEdit, onDelete }) {
+  const { roles, locations, error, createUser, updateUser, deleteUser, refreshUsers, refreshLocations } = useUsers()
+  const { textSize } = useTextSize()
+  const { user: currentUser } = useAuth()
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleEdit = (user: User) => {
-    setSelectedUser(user)
-    setIsEditDialogOpen(true)
+    onEdit(user)
   }
 
   const handleDelete = (user: User) => {
@@ -51,17 +53,7 @@ export function UserTable() {
     }
   }
 
-  const handleAddSubmit = async (values: any) => {
-    setIsSubmitting(true)
-    try {
-      await createUser(values)
-      setIsAddDialogOpen(false)
-    } catch (error) {
-      console.error("Error during create:", error)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+
 
   const handleEditSubmit = async (values: any) => {
     if (selectedUser) {
@@ -79,6 +71,7 @@ export function UserTable() {
 
   const handleRefresh = () => {
     refreshUsers()
+    refreshLocations()
   }
 
   // Helper function to get role name safely
@@ -91,22 +84,31 @@ export function UserTable() {
     return role ? role.name : `Role ${user.role_id}`
   }
 
+  // Helper function to get text size classes
+  const getTextSizeClasses = () => {
+    switch (textSize) {
+      case "large":
+        return {
+          tableHeader: "text-base",
+          tableCell: "text-base",
+        }
+      case "x-large":
+        return {
+          tableHeader: "text-lg",
+          tableCell: "text-lg",
+        }
+      default:
+        return {
+          tableHeader: "text-sm",
+          tableCell: "text-sm",
+        }
+    }
+  }
+
+  const textClasses = getTextSizeClasses()
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Users</CardTitle>
-        <div className="flex space-x-2">
-          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-          <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add User
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
+   <div className="flex flex-col h-full">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
             <p className="font-medium">Error</p>
@@ -118,52 +120,48 @@ export function UserTable() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className={textClasses.tableHeader}>Name</TableHead>
+                <TableHead className={textClasses.tableHeader}>Email</TableHead>
+                <TableHead className={textClasses.tableHeader}>Role</TableHead>
+                <TableHead className={textClasses.tableHeader}>Location</TableHead>
+                <TableHead className={`text-right ${textClasses.tableHeader}`}>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
+              {users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-6">
-                    <div className="flex justify-center items-center">
-                      <RefreshCw className="h-5 w-5 animate-spin mr-2" />
-                      Loading users...
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : users.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-6">
-                    {error ? (
-                      <div>
-                        <p>Error loading users.</p>
-                      </div>
-                    ) : (
-                      <div>
-                        <p>No users found. Click "Add User" to create one.</p>
-                      </div>
-                    )}
+                  <TableCell colSpan={5} className={`text-center py-6 ${textClasses.tableCell}`}>
+                    <p>No users found. Click "Add User" to create one.</p>
                   </TableCell>
                 </TableRow>
               ) : (
                 users.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.name || "N/A"}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>{getRoleName(user)}</TableCell>
+                    <TableCell className={`font-medium ${textClasses.tableCell}`}>{user.name || "N/A"}</TableCell>
+                    <TableCell className={textClasses.tableCell}>{user.email}</TableCell>
+                    <TableCell className={textClasses.tableCell}>{getRoleName(user)}</TableCell>
+                    <TableCell className={textClasses.tableCell}>
+                      {user.location_id && locations.find(loc => loc.id === user.location_id)?.name || 
+                       user.location?.name || 
+                       "Not assigned"}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(user)}>
-                          <Pencil className="h-4 w-4" />
+                        <Button variant="outline" size="icon" onClick={() => handleEdit(user)}>
+                          <Edit className="h-4 w-4" />
                           <span className="sr-only">Edit</span>
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(user)}>
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                          <span className="sr-only">Delete</span>
-                        </Button>
+                        {currentUser && user.id === currentUser.id ? (
+                          <Button variant="outline" size="icon" disabled title="Cannot delete your own account">
+                            <Lock className="h-4 w-4" />
+                            <span className="sr-only">Cannot Delete</span>
+                          </Button>
+                        ) : (
+                          <Button variant="destructive" size="icon" onClick={() => handleDelete(user)}>
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Delete</span>
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -172,18 +170,9 @@ export function UserTable() {
             </TableBody>
           </Table>
         </div>
-      </CardContent>
+      
 
-      {/* Add User Dialog */}
-      <UserForm
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-        onSubmit={handleAddSubmit}
-        roles={roles}
-        isLoading={isSubmitting}
-      />
 
-      {/* Edit User Dialog */}
       {selectedUser && (
         <UserForm
           open={isEditDialogOpen}
@@ -191,6 +180,7 @@ export function UserTable() {
           onSubmit={handleEditSubmit}
           user={selectedUser}
           roles={roles}
+          locations={locations}
           isLoading={isSubmitting}
         />
       )}
@@ -220,6 +210,6 @@ export function UserTable() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Card>
+    </div>
   )
 }

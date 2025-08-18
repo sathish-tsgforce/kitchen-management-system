@@ -1,10 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { supabase, supabaseAdmin } from "@/lib/supabase"
 import { v4 as uuidv4 } from "uuid"
-
-// Create a Supabase client with the service role key for admin access
-// This bypasses RLS policies for uploads
-const supabaseAdmin = createClient(process.env.SUPABASE_URL || "", process.env.SUPABASE_SERVICE_ROLE_KEY || "")
 
 // The exact bucket name
 const BUCKET_NAME = "fortitude-culina-media"

@@ -102,7 +102,7 @@ export default function NewRecipeForm() {
       menuItems={menuItems}
       onSave={handleSave}
       backUrl="/recipes"
-      title="Create New Recipe"
+      title="Add New Recipe"
       isLoading={isLoading}
       isSubmitting={isSubmitting}
     />

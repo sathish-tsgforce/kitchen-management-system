@@ -126,8 +126,8 @@ export default function RecipeSteps({ steps, textSize = "normal" }: RecipeStepsP
     <ol className="space-y-10">
       {isLoading && (
         <div className="flex items-center justify-center py-4">
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-700"></div>
-          <span className="ml-2 text-sm text-green-700">Loading audio files...</span>
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-800"></div>
+          <span className="ml-2 text-sm text-green-800">Loading audio files...</span>
         </div>
       )}
 
@@ -135,7 +135,7 @@ export default function RecipeSteps({ steps, textSize = "normal" }: RecipeStepsP
         <li key={step.id} className="relative border-b border-gray-200 pb-8 last:border-0 last:pb-0">
           <div className="flex items-start gap-4">
             <div
-              className={`flex-shrink-0 ${textClasses.stepNumber} bg-green-700 text-white rounded-full flex items-center justify-center font-bold`}
+              className={`flex-shrink-0 ${textClasses.stepNumber} bg-green-800 text-white rounded-full flex items-center justify-center font-bold`}
             >
               {step.step_number}
             </div>

@@ -1,5 +1,5 @@
 // API functions for recipes
-import { supabase } from "@/lib/api/supabase"
+import { supabase } from "@/lib/supabase"
 import type { Recipe, RecipeIngredient, RecipeStep } from "@/lib/types"
 import { deleteFile } from "@/lib/utils/storage"
 
