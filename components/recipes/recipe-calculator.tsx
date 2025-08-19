@@ -31,6 +31,10 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
   const { textSize } = useTextSize()
   const { user } = useAuth()
   
+  // State for maximum serving size (configurable by admin)
+  const [maxServingSize, setMaxServingSize] = useState(Math.max(50, recipe.standard_serving_pax * 3))
+  const [maxInputValue, setMaxInputValue] = useState(Math.max(50, recipe.standard_serving_pax * 3).toString())
+  
   // State for locations and selected location
   const [locations, setLocations] = useState<Location[]>([])
   const [selectedLocationId, setSelectedLocationId] = useState<number | undefined>(
@@ -79,7 +83,7 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
     setInputValue(value)
 
     const numValue = Number.parseInt(value, 10)
-    if (!isNaN(numValue) && numValue > 0 && numValue <= Math.max(50, recipe.standard_serving_pax * 3)) {
+    if (!isNaN(numValue) && numValue > 0 && numValue <= maxServingSize) {
       setServingSize(numValue)
     }
   }
@@ -90,10 +94,38 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
     if (isNaN(numValue) || numValue <= 0) {
       setServingSize(1)
       setInputValue("1")
-    } else if (numValue > Math.max(50, recipe.standard_serving_pax * 3)) {
-      const maxValue = Math.max(50, recipe.standard_serving_pax * 3)
-      setServingSize(maxValue)
-      setInputValue(maxValue.toString())
+    } else if (numValue > maxServingSize) {
+      setServingSize(maxServingSize)
+      setInputValue(maxServingSize.toString())
+    }
+  }
+
+  // Handle max serving size change (admin only)
+  const handleMaxInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setMaxInputValue(value)
+
+    const numValue = Number.parseInt(value, 10)
+    if (!isNaN(numValue) && numValue >= recipe.standard_serving_pax && numValue <= 1000) {
+      setMaxServingSize(numValue)
+      // Adjust current serving size if it exceeds new max
+      if (servingSize > numValue) {
+        setServingSize(numValue)
+        setInputValue(numValue.toString())
+      }
+    }
+  }
+
+  // Handle max input blur to validate and correct values
+  const handleMaxInputBlur = () => {
+    const numValue = Number.parseInt(maxInputValue, 10)
+    if (isNaN(numValue) || numValue < recipe.standard_serving_pax) {
+      const defaultMax = Math.max(50, recipe.standard_serving_pax * 3)
+      setMaxServingSize(defaultMax)
+      setMaxInputValue(defaultMax.toString())
+    } else if (numValue > 1000) {
+      setMaxServingSize(1000)
+      setMaxInputValue("1000")
     }
   }
 
@@ -106,8 +138,7 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
 
   // Increment/decrement serving size
   const incrementServingSize = () => {
-    const maxValue = Math.max(50, recipe.standard_serving_pax * 3)
-    if (servingSize < maxValue) {
+    if (servingSize < maxServingSize) {
       setServingSize(servingSize + 1)
     }
   }
@@ -214,7 +245,7 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
   const allIngredientsAvailable = shortageCount === 0
 
   // Calculate slider marks for standard pax
-  const sliderMax = Math.max(50, recipe.standard_serving_pax * 3)
+  const sliderMax = maxServingSize
 
   // Calculate the exact position for the standard pax marker
   // This ensures the marker aligns exactly with where the slider stops
@@ -249,6 +280,32 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
               ))}
             </SelectContent>
           </Select>
+        </div>
+      )}
+
+      {/* Max serving size configuration for Admin users */}
+      {user?.role === "Admin" && (
+        <div className="mb-4">
+          <Label htmlFor="max-serving-input" className={`${textClasses.subheading} font-medium mb-2 block`}>
+            Maximum Serving Size
+          </Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="max-serving-input"
+              type="number"
+              min={recipe.standard_serving_pax}
+              max="1000"
+              value={maxInputValue}
+              onChange={handleMaxInputChange}
+              onBlur={handleMaxInputBlur}
+              className="w-32"
+              aria-describedby="max-serving-help"
+            />
+            <span className={`${textClasses.body} text-gray-600`}>people</span>
+          </div>
+          <p id="max-serving-help" className={`${textClasses.detail} text-gray-500 mt-1`}>
+            Set the maximum number of people this calculator can serve (minimum: {recipe.standard_serving_pax})
+          </p>
         </div>
       )}
 
