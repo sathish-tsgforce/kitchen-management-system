@@ -38,7 +38,7 @@ export default function InventoryForm({ ingredient, onSuccess }: InventoryFormPr
   const [error, setError] = useState<string | null>(null)
 
   const categories = ["Vegetables", "Fruits", "Dairy", "Meat", "Seafood", "Grains", "Spices", "Oils", "Sweeteners", "Herbs", "Baking", "Other"]
-  const units = ["g", "kg", "ml", "l", "pcs", "bunch", "tbsp", "tsp", "cup"]
+  const units = ["g", "kg", "ml", "litres", "pcs", "tbsp", "tsp", "cup"]
   const storageTypes = ["Standard", "Refrigerated", "Frozen", "Dry", "Vacuum Sealed", "Canned"]
 
   useEffect(() => {
