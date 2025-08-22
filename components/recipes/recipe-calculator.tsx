@@ -17,23 +17,41 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/lib/context/auth-context"
 import { supabase } from "@/lib/supabase"
 import type { Recipe, Location } from "@/lib/types"
+import { useConfig, useUpdateConfig } from "@/lib/hooks/use-config"
 
 interface RecipeCalculatorProps {
   recipe: Recipe
 }
 
 export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
+  const { textSize } = useTextSize()
+  const { user } = useAuth()
+  
+  // Fetch max serving size from database config
+  const { data: maxServingSizeConfig, isLoading: configLoading } = useConfig('max_serving_size')
+  const updateConfig = useUpdateConfig()
+  
+  // Get the max serving size from config, fallback to 200 if not available
+  const defaultMaxServingSize = maxServingSizeConfig ? parseInt(maxServingSizeConfig.value) : 200
+  
   // State for serving size - default to standard value
   const [servingSize, setServingSize] = useState(recipe.standard_serving_pax)
   const [inputValue, setInputValue] = useState(recipe.standard_serving_pax.toString())
   const [forceUpdate, setForceUpdate] = useState(0)
   const sliderRef = useRef<HTMLDivElement>(null)
-  const { textSize } = useTextSize()
-  const { user } = useAuth()
   
   // State for maximum serving size (configurable by admin)
-  const [maxServingSize, setMaxServingSize] = useState(Math.max(50, recipe.standard_serving_pax * 3))
-  const [maxInputValue, setMaxInputValue] = useState(Math.max(50, recipe.standard_serving_pax * 3).toString())
+  const [maxServingSize, setMaxServingSize] = useState(defaultMaxServingSize)
+  const [maxInputValue, setMaxInputValue] = useState(defaultMaxServingSize.toString())
+  
+  // Update max serving size when config loads
+  useEffect(() => {
+    if (maxServingSizeConfig) {
+      const configValue = parseInt(maxServingSizeConfig.value)
+      setMaxServingSize(configValue)
+      setMaxInputValue(configValue.toString())
+    }
+  }, [maxServingSizeConfig])
   
   // State for locations and selected location
   const [locations, setLocations] = useState<Location[]>([])
@@ -116,16 +134,32 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
     }
   }
 
-  // Handle max input blur to validate and correct values
-  const handleMaxInputBlur = () => {
+  // Handle max input blur to validate and correct values, then save to database
+  const handleMaxInputBlur = async () => {
     const numValue = Number.parseInt(maxInputValue, 10)
+    let finalValue = numValue
+    
     if (isNaN(numValue) || numValue < recipe.standard_serving_pax) {
-      const defaultMax = Math.max(50, recipe.standard_serving_pax * 3)
-      setMaxServingSize(defaultMax)
-      setMaxInputValue(defaultMax.toString())
+      finalValue = 200 // Default to 200 instead of calculated value
+      setMaxServingSize(finalValue)
+      setMaxInputValue(finalValue.toString())
     } else if (numValue > 1000) {
-      setMaxServingSize(1000)
+      finalValue = 1000
+      setMaxServingSize(finalValue)
       setMaxInputValue("1000")
+    }
+    
+    // Save to database if user is admin
+    if (user?.role === "Admin") {
+      try {
+        await updateConfig.mutateAsync({
+          key: 'max_serving_size',
+          value: finalValue
+        })
+      } catch (error) {
+        console.error('Failed to update max serving size config:', error)
+        // Could add a toast notification here for user feedback
+      }
     }
   }
 
@@ -300,11 +334,15 @@ export default function RecipeCalculator({ recipe }: RecipeCalculatorProps) {
               onBlur={handleMaxInputBlur}
               className="w-32"
               aria-describedby="max-serving-help"
+              disabled={configLoading || updateConfig.isPending}
             />
             <span className={`${textClasses.body} text-gray-600`}>people</span>
+            {updateConfig.isPending && (
+              <span className={`${textClasses.detail} text-blue-600`}>Saving...</span>
+            )}
           </div>
           <p id="max-serving-help" className={`${textClasses.detail} text-gray-500 mt-1`}>
-            Set the maximum number of people this calculator can serve (minimum: {recipe.standard_serving_pax})
+            Set the maximum number of people this calculator can serve (minimum: {recipe.standard_serving_pax}). Changes are saved automatically.
           </p>
         </div>
       )}
