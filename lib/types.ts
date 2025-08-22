@@ -90,3 +90,12 @@ export interface Location {
   address?: string
   is_active: boolean
 }
+
+export interface Config {
+  id: number
+  key: string
+  value: string
+  description?: string
+  created_at: string
+  updated_at: string
+}
