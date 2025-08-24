@@ -40,7 +40,13 @@ export interface Ingredient {
     name: string
   }
   threshold_quantity?: number
-  storage_type?: string
+  storage_type_id: number // Foreign key to storage_types table
+  storage_type_ref?: {
+    id: number
+    name: string
+    description?: string
+    is_active: boolean
+  }
 }
 
 export interface MenuItem {
@@ -98,4 +104,10 @@ export interface Config {
   description?: string
   created_at: string
   updated_at: string
+}
+
+export interface StorageType {
+  id: number
+  name: string
+  description?: string
 }

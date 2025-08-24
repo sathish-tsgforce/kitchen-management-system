@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Ingredient, Location } from "@/lib/types"
 import { useInventory } from "@/lib/hooks/use-inventory"
+import { useStorageTypes } from "@/lib/hooks/use-storage-types"
+import { getStorageTypeName, getStorageTypeId } from "@/lib/utils/storage-type-utils"
 import { DialogClose } from "@/components/ui/dialog"
 import { toast } from "@/components/ui/use-toast"
 import { supabase } from "@/lib/supabase"
@@ -21,6 +23,7 @@ interface InventoryFormProps {
 
 export default function InventoryForm({ ingredient, onSuccess }: InventoryFormProps) {
   const { addIngredient, updateIngredient } = useInventory()
+  const { data: storageTypesData = [], isLoading: loadingStorageTypes } = useStorageTypes()
   const { user } = useAuth()
   const [locations, setLocations] = useState<Location[]>([])
 
@@ -32,14 +35,13 @@ export default function InventoryForm({ ingredient, onSuccess }: InventoryFormPr
     category: ingredient?.category || "Other",
     location_id: ingredient?.location_id || 0,
     threshold_quantity: ingredient?.threshold_quantity || 10,
-    storage_type: ingredient?.storage_type || "Standard",
+    storage_type_id: getStorageTypeId(ingredient || {} as Ingredient),
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const categories = ["Vegetables", "Fruits", "Dairy", "Meat", "Seafood", "Grains", "Spices", "Oils", "Sweeteners", "Herbs", "Baking", "Other"]
   const units = ["g", "kg", "ml", "litres", "pcs", "tbsp", "tsp", "cup"]
-  const storageTypes = ["Standard", "Refrigerated", "Frozen", "Dry", "Vacuum Sealed", "Canned"]
 
   useEffect(() => {
     // Fetch locations
@@ -75,6 +77,18 @@ export default function InventoryForm({ ingredient, onSuccess }: InventoryFormPr
     
     fetchLocations()
   }, [ingredient?.location_id, user?.role, user?.location_id])
+
+  // Set default storage type when storage types are loaded
+  useEffect(() => {
+    if (!loadingStorageTypes && storageTypesData.length > 0 && !formData.storage_type_id) {
+      // Find "Standard" storage type or use the first one
+      const standardType = storageTypesData.find(st => st.name === "Standard") || storageTypesData[0]
+      setFormData(prev => ({
+        ...prev,
+        storage_type_id: standardType.id,
+      }))
+    }
+  }, [loadingStorageTypes, storageTypesData, formData.storage_type_id])
 
   const handleChange = (field: string, value: string | number) => {
     setFormData({
@@ -126,7 +140,7 @@ export default function InventoryForm({ ingredient, onSuccess }: InventoryFormPr
           category: formData.category || "",
           location_id: formData.location_id,
           threshold_quantity: formData.threshold_quantity || 10,
-          storage_type: formData.storage_type || "Standard",
+          storage_type_id: formData.storage_type_id,
         }
 
         console.log("Submitting new ingredient:", newIngredientData)
@@ -303,19 +317,26 @@ export default function InventoryForm({ ingredient, onSuccess }: InventoryFormPr
           </div>
 
           <div>
-            <Label htmlFor="storage_type" className="text-sm font-medium">
+            <Label htmlFor="storage_type_id" className="text-sm font-medium">
               Storage Type
             </Label>
-            <Select value={formData.storage_type || "Standard"} onValueChange={(value) => handleChange("storage_type", value)}>
-              <SelectTrigger id="storage_type" className="h-8">
-                <SelectValue placeholder="Select" />
+            <Select 
+              value={formData.storage_type_id?.toString()} 
+              onValueChange={(value) => handleChange("storage_type_id", value)}
+            >
+              <SelectTrigger id="storage_type_id" className="h-8">
+                <SelectValue placeholder="Select storage type" />
               </SelectTrigger>
               <SelectContent>
-                {storageTypes.map((type) => (
-                  <SelectItem key={type} value={type} className="cursor-pointer">
-                    {type}
-                  </SelectItem>
-                ))}
+                {loadingStorageTypes ? (
+                  <SelectItem value="1" disabled>Loading storage types...</SelectItem>
+                ) : (
+                  storageTypesData.map((type) => (
+                    <SelectItem key={type.id} value={type.id.toString()} className="cursor-pointer">
+                      {type.name}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>

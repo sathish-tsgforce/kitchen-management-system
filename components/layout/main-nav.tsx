@@ -31,7 +31,12 @@ export function MainNav() {
       active: pathname === "/locations",
       roles: ["Admin"] // Admin only
     },
-
+    {
+      href: "/storage-types",
+      label: "Storage Types",
+      active: pathname === "/storage-types",
+      roles: ["Admin"] // Admin only
+    },
     {
       href: "/menu",
       label: "Menu",
