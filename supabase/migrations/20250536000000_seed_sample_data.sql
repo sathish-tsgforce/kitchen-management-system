@@ -17,23 +17,23 @@ INSERT INTO public.menu_items (name, description, image_url, minimum_order_quant
   ('Beef Burger', 'Juicy beef patty with lettuce, tomato, and special sauce on a brioche bun', '/placeholder.svg?height=300&width=300', 1, 13.99);
 
 -- Insert ingredients
-INSERT INTO public.ingredients (name, quantity, threshold_quantity, unit, price, category, storage_type, location_id) VALUES
-  ('Pizza Dough', 500, 100, 'g', 3.99, 'Grains', 'Refrigerator', 1),
-  ('Tomato Sauce', 300, 50, 'g', 2.49, 'Vegetables', 'Dry Storage', 1),
-  ('Fresh Mozzarella', 350, 100, 'g', 4.99, 'Dairy', 'Refrigerator', 1),
-  ('Fresh Basil Leaves', 15, 5, 'leaves', 1.99, 'Herbs', 'Refrigerator', 1),
-  ('Olive Oil', 200, 50, 'ml', 8.99, 'Oils', 'Dry Storage', 1),
-  ('Broccoli Florets', 400, 100, 'g', 2.99, 'Vegetables', 'Refrigerator', 1),
-  ('Bell Peppers', 3, 2, 'medium', 1.5, 'Vegetables', 'Refrigerator', 1),
-  ('Carrots', 1, 1, 'large', 0.75, 'Vegetables', 'Refrigerator', 1),
-  ('Soy Sauce', 100, 25, 'ml', 3.49, 'Condiments', 'Dry Storage', 1),
-  ('Sesame Oil', 50, 15, 'ml', 5.99, 'Oils', 'Dry Storage', 1),
-  ('All-Purpose Flour', 1000, 200, 'g', 2.99, 'Grains', 'Dry Storage', 1),
-  ('Unsalted Butter', 400, 1200, 'g', 4.49, 'Dairy', 'Refrigerator', 1),
-  ('Brown Sugar', 300, 5000, 'g', 2.29, 'Sweeteners', 'Dry Storage', 1),
-  ('Granulated Sugar', 500, 5000, 'g', 1.99, 'Sweeteners', 'Dry Storage', 1),
-  ('Eggs', 6, 50, 'large', 3.49, 'Dairy', 'Refrigerator', 1),
-  ('Chocolate Chips', 200, 5000, 'g', 3.99, 'Baking', 'Dry Storage', 1);
+INSERT INTO public.ingredients (name, quantity, threshold_quantity, unit, price, category, storage_type_id, location_id) VALUES
+  ('Pizza Dough', 500, 100, 'g', 3.99, 'Grains', (SELECT id FROM storage_types WHERE name = 'Refrigerated'), 1),
+  ('Tomato Sauce', 300, 50, 'g', 2.49, 'Vegetables', (SELECT id FROM storage_types WHERE name = 'Dry'), 1),
+  ('Fresh Mozzarella', 350, 100, 'g', 4.99, 'Dairy', (SELECT id FROM storage_types WHERE name = 'Refrigerated'), 1),
+  ('Fresh Basil Leaves', 15, 5, 'leaves', 1.99, 'Herbs', (SELECT id FROM storage_types WHERE name = 'Refrigerated'), 1),
+  ('Olive Oil', 200, 50, 'ml', 8.99, 'Oils', (SELECT id FROM storage_types WHERE name = 'Dry'), 1),
+  ('Broccoli Florets', 400, 100, 'g', 2.99, 'Vegetables', (SELECT id FROM storage_types WHERE name = 'Refrigerated'), 1),
+  ('Bell Peppers', 3, 2, 'medium', 1.5, 'Vegetables', (SELECT id FROM storage_types WHERE name = 'Refrigerated'), 1),
+  ('Carrots', 1, 1, 'large', 0.75, 'Vegetables', (SELECT id FROM storage_types WHERE name = 'Refrigerated'), 1),
+  ('Soy Sauce', 100, 25, 'ml', 3.49, 'Condiments', (SELECT id FROM storage_types WHERE name = 'Dry'), 1),
+  ('Sesame Oil', 50, 15, 'ml', 5.99, 'Oils', (SELECT id FROM storage_types WHERE name = 'Dry'), 1),
+  ('All-Purpose Flour', 1000, 200, 'g', 2.99, 'Grains', (SELECT id FROM storage_types WHERE name = 'Dry'), 1),
+  ('Unsalted Butter', 400, 1200, 'g', 4.49, 'Dairy', (SELECT id FROM storage_types WHERE name = 'Refrigerated'), 1),
+  ('Brown Sugar', 300, 5000, 'g', 2.29, 'Sweeteners', (SELECT id FROM storage_types WHERE name = 'Dry'), 1),
+  ('Granulated Sugar', 500, 5000, 'g', 1.99, 'Sweeteners', (SELECT id FROM storage_types WHERE name = 'Dry'), 1),
+  ('Eggs', 6, 50, 'large', 3.49, 'Dairy', (SELECT id FROM storage_types WHERE name = 'Refrigerated'), 1),
+  ('Chocolate Chips', 200, 5000, 'g', 3.99, 'Baking', (SELECT id FROM storage_types WHERE name = 'Dry'), 1);
 
 -- Insert recipes
 INSERT INTO public.recipes (menu_item_id, standard_serving_pax, accessibility_notes) VALUES
