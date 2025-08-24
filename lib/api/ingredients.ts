@@ -9,7 +9,7 @@ export async function fetchIngredients(): Promise<Ingredient[]> {
       .select(`
         *,
         location:locations(id, name),
-        storage_type_ref:storage_types(id, name, description, is_active)
+        storage_type_ref:storage_types(id, name, description)
       `)
 
     if (error) throw error
@@ -51,7 +51,7 @@ export async function addIngredient(ingredient: Omit<Ingredient, "id">): Promise
       .select(`
         *,
         location:locations(id, name),
-        storage_type_ref:storage_types(id, name, description, is_active)
+        storage_type_ref:storage_types(id, name, description)
       `)
 
     if (error) {
@@ -78,7 +78,7 @@ export async function updateIngredient(id: number, updatedFields: Partial<Ingred
       .select(`
         *,
         location:locations(id, name),
-        storage_type_ref:storage_types(id, name, description, is_active)
+        storage_type_ref:storage_types(id, name, description)
       `)
       .single()
       
