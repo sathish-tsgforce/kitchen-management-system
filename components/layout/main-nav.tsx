@@ -41,7 +41,7 @@ export function MainNav() {
       href: "/menu",
       label: "Menu",
       active: pathname === "/menu" || pathname.startsWith("/menu/"),
-      roles: ["Admin"] // Admin only
+      roles: ["Admin", "Chef"] // Admin and Chef
     },
     {
       href: "/users",

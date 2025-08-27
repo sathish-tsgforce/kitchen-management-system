@@ -320,7 +320,7 @@ export default function RecipeForm({
           <div className="grid gap-6 mb-8">
             <div className="grid gap-2">
               <Label htmlFor="menu-item" className="text-lg">
-                Menu Item
+                Menu Item (Select from existing or Add new menu Item)
               </Label>
               <Select
                 value={menuItemId ? menuItemId.toString() : ""}
@@ -338,7 +338,6 @@ export default function RecipeForm({
                 </SelectContent>
               </Select>
               <div className="text-sm text-gray-500 mt-1 space-y-2">
-                <p>Note: Before adding new recipe add a new menu item.</p>
                 <br/>
                   <Link href="/menu/new">
                     <Button type="button" className="bg-green-800 hover:bg-green-900 text-white">
