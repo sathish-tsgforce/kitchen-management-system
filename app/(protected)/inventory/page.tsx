@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import InventoryForm from "@/components/inventory/inventory-form"
 import { useInventory } from "@/lib/hooks/use-inventory"
 import { useAuth } from "@/lib/context/auth-context"
+import { getStorageTypeName } from "@/lib/utils/storage-type-utils"
 import { supabase } from "@/lib/supabase"
 import type { Location } from "@/lib/types"
 import {
@@ -82,12 +83,23 @@ export default function InventoryPage() {
   const sortedIngredients = [...userIngredients].sort((a, b) => {
     if (!sortConfig) return 0
 
-    const key = sortConfig.key as keyof typeof a
+    let aValue: any
+    let bValue: any
 
-    if (a[key] < b[key]) {
+    // Handle special sorting for storage_type
+    if (sortConfig.key === "storage_type") {
+      aValue = getStorageTypeName(a)
+      bValue = getStorageTypeName(b)
+    } else {
+      const key = sortConfig.key as keyof typeof a
+      aValue = a[key]
+      bValue = b[key]
+    }
+
+    if (aValue < bValue) {
       return sortConfig.direction === "ascending" ? -1 : 1
     }
-    if (a[key] > b[key]) {
+    if (aValue > bValue) {
       return sortConfig.direction === "ascending" ? 1 : -1
     }
     return 0
@@ -101,6 +113,7 @@ export default function InventoryPage() {
       String(ingredient.unit).toLowerCase().includes(searchQuery.toLowerCase()) ||
       (ingredient.category && String(ingredient.category).toLowerCase().includes(searchQuery.toLowerCase())) ||
       (ingredient.location?.name && String(ingredient.location.name).toLowerCase().includes(searchQuery.toLowerCase())) ||
+      getStorageTypeName(ingredient).toLowerCase().includes(searchQuery.toLowerCase()) ||
       (ingredient.quantity !== undefined && String(ingredient.quantity).includes(searchQuery)) ||
       (ingredient.price !== undefined && String(ingredient.price).includes(searchQuery))
 
@@ -197,7 +210,7 @@ export default function InventoryPage() {
         ingredient.price ? `${ingredient.price.toFixed(2)}` : "N/A",
         ingredient.category || "Uncategorized",
         ingredient.location?.name || "Not specified",
-        ingredient.storage_type || "Standard",
+        getStorageTypeName(ingredient),
       ])
 
       // Combine headers and data
@@ -482,7 +495,7 @@ export default function InventoryPage() {
                   <TableCell className={textClasses.tableCell}>${ingredient.price?.toFixed(2) || "N/A"}</TableCell>
                   <TableCell className={textClasses.tableCell}>{ingredient.category || "Uncategorized"}</TableCell>
                   <TableCell className={textClasses.tableCell}>{ingredient.location?.name || "Not specified"}</TableCell>
-                  <TableCell className={textClasses.tableCell}>{ingredient.storage_type || "Standard"}</TableCell>
+                  <TableCell className={textClasses.tableCell}>{getStorageTypeName(ingredient)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Dialog open={editDialogOpen === ingredient.id} onOpenChange={(open) => setEditDialogOpen(open ? ingredient.id : null)}>

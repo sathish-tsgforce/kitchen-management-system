@@ -1,6 +1,20 @@
 -- This SQL script creates the initial database schema for a kitchen management system.
 -- It includes tables for users, roles, locations, ingredients, menu items, recipes, recipe ingredients, and recipe steps.
 
+CREATE TABLE public.config (
+    id SERIAL PRIMARY KEY,
+    key VARCHAR(255) NOT NULL UNIQUE,
+    value TEXT NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP
+    WITH
+        TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP
+    WITH
+        TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+
 CREATE TABLE public.locations (
   name character varying NOT NULL,
   address text,
@@ -25,6 +39,14 @@ CREATE TABLE public.users (
   CONSTRAINT users_role_id_fkey FOREIGN KEY (role_id) REFERENCES public.roles(id)
 );
 
+CREATE TABLE public.storage_types (
+  id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  name character varying(50) NOT NULL UNIQUE,
+  description text,
+  CONSTRAINT storage_types_pkey PRIMARY KEY (id),
+  CONSTRAINT storage_types_name_check CHECK (char_length(name) > 0)
+);
+
 
 CREATE TABLE public.ingredients (
   name text NOT NULL,
@@ -35,6 +57,7 @@ CREATE TABLE public.ingredients (
   category text,
   id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
   storage_type character varying,
+  storage_type_id integer REFERENCES public.storage_types(id),
   location_id integer NOT NULL,
   CONSTRAINT ingredients_pkey PRIMARY KEY (id),
   CONSTRAINT fk_inventory_location FOREIGN KEY (location_id) REFERENCES public.locations(id)
