@@ -56,7 +56,6 @@ CREATE TABLE public.ingredients (
   price numeric,
   category text,
   id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
-  storage_type character varying,
   storage_type_id integer REFERENCES public.storage_types(id),
   location_id integer NOT NULL,
   CONSTRAINT ingredients_pkey PRIMARY KEY (id),
