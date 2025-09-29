@@ -15,17 +15,23 @@ export function middleware(request: NextRequest) {
   
   // Check if the path should bypass middleware completely
   if (bypassPaths.some(path => pathname.startsWith(path))) {
-    return NextResponse.next()
+    const response = NextResponse.next()
+    addSecurityHeaders(response)
+    return response
   }
   
   // Check if the path has a file extension that should bypass middleware
   if (bypassExtensions.some(ext => pathname.includes(ext))) {
-    return NextResponse.next()
+    const response = NextResponse.next()
+    addSecurityHeaders(response)
+    return response
   }
   
   // Check if the path is public
   if (publicPaths.some(path => pathname.startsWith(path))) {
-    return NextResponse.next()
+    const response = NextResponse.next()
+    addSecurityHeaders(response)
+    return response
   }
   
   // Check for auth token in cookies
@@ -36,5 +42,16 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
   
-  return NextResponse.next()
+  const response = NextResponse.next()
+  addSecurityHeaders(response)
+  return response
+}
+
+function addSecurityHeaders(response: NextResponse) {
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('Referrer-Policy', 'origin-when-cross-origin')
+  response.headers.set('X-XSS-Protection', '1; mode=block')
+  response.headers.set('Access-Control-Allow-Origin', 'https://kitchen-management-system-dusky.vercel.app')
+  response.headers.set('Access-Control-Allow-Credentials', 'true')
 }
